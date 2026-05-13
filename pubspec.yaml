@@ -1,0 +1,26 @@
+name: app_ia_llm
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # llama_cpp_dart: ^0.2.2
+  path_provider: ^2.1.5
+  permission_handler: ^12.0.1
+  # llamadart: ^0.6.12 # Alternativa a llama_cpp_dart
+  flutter_gemma: ^0.15.0 # Alternativa a llama_cpp_dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/
