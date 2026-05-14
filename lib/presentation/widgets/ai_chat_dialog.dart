@@ -1,5 +1,6 @@
 import 'package:app_ia_llm/domain/entities/customer.dart';
 import 'package:app_ia_llm/domain/entities/product.dart';
+import 'package:app_ia_llm/domain/entities/sale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -11,9 +12,11 @@ class AiChatDialog extends StatefulWidget {
     super.key,
     this.onCustomerCreated,
     this.onProductCreated,
+    this.onSaleCreated,
   });
   final Function(Customer)? onCustomerCreated;
   final Function(Product)? onProductCreated;
+  final Function(Sale)? onSaleCreated;
 
   @override
   State<AiChatDialog> createState() => _AiChatDialogState();
@@ -559,7 +562,12 @@ class _AiChatDialogState extends State<AiChatDialog> {
       _controller.clear();
     });
 
-    await gemmaVM.processCommand(text);
+    await gemmaVM.processCommand(
+      text,
+      onCustomerCreated: widget.onCustomerCreated, // DUDOSO
+      onProductCreated: widget.onProductCreated,
+      onSaleCreated: widget.onSaleCreated,
+    );
 
     setState(() => _loading = false);
     _scrollToBottom();

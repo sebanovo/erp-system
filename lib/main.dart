@@ -7,6 +7,7 @@ import 'core/routes/app_router.dart';
 import 'presentation/viewmodels/gemma_viewmodel.dart';
 import 'presentation/viewmodels/customers_viewmodel.dart';
 import 'presentation/viewmodels/products_viewmodel.dart'; // ← Agregar
+import 'presentation/viewmodels/sales_viewmodel.dart'; // ← Agregar
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => di.sl<ProductsViewModel>()..load(), // ← Agregar
         ),
+        ChangeNotifierProvider(create: (_) => di.sl<SalesViewModel>()..load()),
         ChangeNotifierProvider(create: (_) => di.sl<GemmaViewModel>()),
       ],
       child: MaterialApp.router(

@@ -1,8 +1,12 @@
 import 'package:app_ia_llm/domain/repositories/product_repository.dart';
+import 'package:app_ia_llm/domain/repositories/sale_repository.dart';
 import 'package:app_ia_llm/domain/usecases/create_customer.dart';
 import 'package:app_ia_llm/domain/usecases/create_product.dart';
+import 'package:app_ia_llm/domain/usecases/create_sale.dart';
 import 'package:app_ia_llm/infrastructure/datasources/product_remote_datasource.dart';
+import 'package:app_ia_llm/infrastructure/datasources/sale_remote_datasource.dart';
 import 'package:app_ia_llm/infrastructure/repositories/product_repository_impl.dart';
+import 'package:app_ia_llm/infrastructure/repositories/sale_repository_impl.dart';
 import 'package:app_ia_llm/presentation/viewmodels/products_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
@@ -13,6 +17,7 @@ import '../../domain/repositories/customer_repository.dart';
 import '../../domain/usecases/get_customers.dart';
 import '../../presentation/viewmodels/customers_viewmodel.dart';
 import '../../presentation/viewmodels/gemma_viewmodel.dart';
+import '../../presentation/viewmodels/sales_viewmodel.dart';
 
 final sl = GetIt.instance;
 
@@ -57,5 +62,23 @@ Future<void> init() async {
   // ViewModels
   sl.registerFactory(
     () => ProductsViewModel(sl<ProductRepository>(), sl<CreateProduct>()),
+  );
+
+  // SALES
+  // Dentro de init(), agregar:
+  // Data sources
+  sl.registerLazySingleton<SaleRemoteDataSource>(
+    () => SaleRemoteDataSourceImpl(sl()),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<SaleRepository>(() => SaleRepositoryImpl(sl()));
+
+  // Use cases
+  sl.registerLazySingleton(() => CreateSale(sl<SaleRepository>()));
+
+  // ViewModels
+  sl.registerFactory(
+    () => SalesViewModel(sl<SaleRepository>(), sl<CreateSale>()),
   );
 }

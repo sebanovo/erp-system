@@ -1,5 +1,7 @@
 import 'package:app_ia_llm/domain/entities/product.dart';
+import 'package:app_ia_llm/domain/entities/sale.dart';
 import 'package:app_ia_llm/domain/usecases/create_product.dart';
+import 'package:app_ia_llm/domain/usecases/create_sale.dart';
 import 'package:app_ia_llm/utils/gemma_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
@@ -10,6 +12,7 @@ import '../../domain/usecases/create_customer.dart';
 class GemmaViewModel extends ChangeNotifier {
   final CreateCustomer _createCustomer = GetIt.instance<CreateCustomer>();
   final CreateProduct _createProduct = GetIt.instance<CreateProduct>();
+  final CreateSale _createSale = GetIt.instance<CreateSale>();
 
   bool _isModelReady = false;
   String _lastResponse = "";
@@ -37,6 +40,7 @@ class GemmaViewModel extends ChangeNotifier {
     String userInput, {
     Function(Customer)? onCustomerCreated,
     Function(Product)? onProductCreated, // ✅ Agregado
+    Function(Sale)? onSaleCreated,
   }) async {
     if (!_isModelReady || _chat == null) {
       _lastResponse = "⚠️ Primero carga un modelo";
@@ -57,7 +61,38 @@ class GemmaViewModel extends ChangeNotifier {
           print("📞 Function call: ${response.name}");
           print("📦 Arguments: ${response.args}");
 
-          if (response.name == 'createProduct') {
+          if (response.name == 'createSale') {
+            final args = response.args;
+            final items = (args['items'] as List)
+                .map(
+                  (item) => SaleItem(
+                    productId: item['product_id'],
+                    quantity: (item['quantity'] as num).toInt(),
+                    unitPrice: (item['unit_price'] as num).toDouble(),
+                    subtotal:
+                        (item['quantity'] as num).toInt() *
+                        (item['unit_price'] as num).toDouble(),
+                    locationId: 'MAIN',
+                  ),
+                )
+                .toList();
+
+            final total = items.fold(0.0, (sum, item) => sum + item.subtotal);
+
+            final sale = Sale(
+              saleId: '',
+              customerId: args['customer_id'],
+              items: items,
+              total: total,
+              status: 'CONFIRMED',
+              createdAt: DateTime.now(),
+            );
+            await _createSale.call(sale);
+            _lastResponse =
+                "✅ Venta creada por ${items.length} producto(s) - Total: $total Bs";
+            notifyListeners();
+            if (onSaleCreated != null) onSaleCreated(sale);
+          } else if (response.name == 'createProduct') {
             final args = response.args;
             final product = Product(
               productId: '',

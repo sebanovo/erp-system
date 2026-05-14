@@ -101,34 +101,21 @@ class ProductsPage extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          "SKU: ${p.sku}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
+                        // ✅ Usar _buildInfoRow correctamente
+                        _buildInfoRow(Icons.tag, "SKU: ${p.sku}", context),
                         const SizedBox(height: 4),
-                        Text(
+                        _buildInfoRow(
+                          Icons.attach_money,
                           "Precio: ${p.price} Bs",
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.deepPurple,
-                          ),
+                          context,
+                          isPrice: true,
                         ),
                         if (p.description != null && p.description!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              p.description!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade400,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          _buildInfoRow(
+                            Icons.description,
+                            p.description!,
+                            context,
+                            maxLines: 2,
                           ),
                         const SizedBox(height: 8),
                         Text(
@@ -156,6 +143,7 @@ class ProductsPage extends StatelessWidget {
             builder: (_) => ChangeNotifierProvider.value(
               value: gemmaVM,
               child: AiChatDialog(
+                onCustomerCreated: (_) {}, // Callback vacío si no se usa
                 onProductCreated: (newProduct) {
                   context.read<ProductsViewModel>().load();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -173,7 +161,13 @@ class ProductsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, BuildContext context) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String text,
+    BuildContext context, {
+    bool isPrice = false,
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -183,7 +177,12 @@ class ProductsPage extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade300),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isPrice ? FontWeight.w500 : FontWeight.normal,
+                color: isPrice ? Colors.deepPurple : Colors.grey.shade300,
+              ),
+              maxLines: maxLines,
               overflow: TextOverflow.ellipsis,
             ),
           ),

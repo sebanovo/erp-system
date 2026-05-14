@@ -16,12 +16,18 @@ class HomePage extends StatelessWidget {
             icon: Icon(Icons.inventory),
             label: "Productos",
           ),
+          NavigationDestination(
+            icon: Icon(Icons.shopping_cart),
+            label: "Ventas",
+          ),
         ],
         onDestinationSelected: (index) {
           if (index == 0) {
             context.go('/customers');
           } else if (index == 1) {
             context.go('/products');
+          } else if (index == 2) {
+            context.go('/sales');
           }
         },
       ),
