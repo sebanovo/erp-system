@@ -1,5 +1,6 @@
 import 'package:app_ia_llm/domain/entities/customer.dart';
 import 'package:app_ia_llm/domain/entities/product.dart';
+import 'package:app_ia_llm/domain/entities/purchase.dart';
 import 'package:app_ia_llm/domain/entities/sale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,10 +14,12 @@ class AiChatDialog extends StatefulWidget {
     this.onCustomerCreated,
     this.onProductCreated,
     this.onSaleCreated,
+    this.onPurchaseCreated,
   });
   final Function(Customer)? onCustomerCreated;
   final Function(Product)? onProductCreated;
   final Function(Sale)? onSaleCreated;
+  final Function(Purchase)? onPurchaseCreated; // ← Agregar
 
   @override
   State<AiChatDialog> createState() => _AiChatDialogState();
@@ -567,6 +570,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
       onCustomerCreated: widget.onCustomerCreated, // DUDOSO
       onProductCreated: widget.onProductCreated,
       onSaleCreated: widget.onSaleCreated,
+      onPurchaseCreated: widget.onPurchaseCreated, // ← Agregar
     );
 
     setState(() => _loading = false);

@@ -20,6 +20,10 @@ class HomePage extends StatelessWidget {
             icon: Icon(Icons.shopping_cart),
             label: "Ventas",
           ),
+          NavigationDestination(
+            icon: Icon(Icons.add_shopping_cart),
+            label: "Compras",
+          ),
         ],
         onDestinationSelected: (index) {
           if (index == 0) {
@@ -28,6 +32,8 @@ class HomePage extends StatelessWidget {
             context.go('/products');
           } else if (index == 2) {
             context.go('/sales');
+          } else if (index == 3) {
+            context.go('/purchases');
           }
         },
       ),

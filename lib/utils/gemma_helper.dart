@@ -75,6 +75,39 @@ class CreateSaleTool {
   );
 }
 
+class CreatePurchaseTool {
+  static const Tool spec = Tool(
+    name: 'createPurchase',
+    description: 'Creates a new purchase order in the ERP system.',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "supplier_name": {
+          "type": "string",
+          "description": "Name of the supplier.",
+        },
+        "items": {
+          "type": "array",
+          "description": "List of products purchased.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "product_id": {"type": "string", "description": "Product ID."},
+              "quantity": {
+                "type": "number",
+                "description": "Quantity purchased.",
+              },
+              "unit_cost": {"type": "number", "description": "Cost per unit."},
+            },
+            "required": ["product_id", "quantity", "unit_cost"],
+          },
+        },
+      },
+      "required": ["supplier_name", "items"],
+    },
+  );
+}
+
 class GemmaHelper {
   static InferenceModel? _model;
   static bool _isReady = false;
@@ -128,6 +161,7 @@ class GemmaHelper {
         CreateCustomerTool.spec,
         CreateProductTool.spec,
         CreateSaleTool.spec,
+        CreatePurchaseTool.spec,
       ],
       toolChoice: ToolChoice.auto,
       supportsFunctionCalls: true,

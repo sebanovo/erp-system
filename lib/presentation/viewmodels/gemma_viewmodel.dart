@@ -1,6 +1,8 @@
 import 'package:app_ia_llm/domain/entities/product.dart';
+import 'package:app_ia_llm/domain/entities/purchase.dart';
 import 'package:app_ia_llm/domain/entities/sale.dart';
 import 'package:app_ia_llm/domain/usecases/create_product.dart';
+import 'package:app_ia_llm/domain/usecases/create_purchase.dart';
 import 'package:app_ia_llm/domain/usecases/create_sale.dart';
 import 'package:app_ia_llm/utils/gemma_helper.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,7 @@ class GemmaViewModel extends ChangeNotifier {
   final CreateCustomer _createCustomer = GetIt.instance<CreateCustomer>();
   final CreateProduct _createProduct = GetIt.instance<CreateProduct>();
   final CreateSale _createSale = GetIt.instance<CreateSale>();
+  final CreatePurchase _createPurchase = GetIt.instance<CreatePurchase>();
 
   bool _isModelReady = false;
   String _lastResponse = "";
@@ -41,6 +44,7 @@ class GemmaViewModel extends ChangeNotifier {
     Function(Customer)? onCustomerCreated,
     Function(Product)? onProductCreated, // ✅ Agregado
     Function(Sale)? onSaleCreated,
+    Function(Purchase)? onPurchaseCreated, // ← Agregar
   }) async {
     if (!_isModelReady || _chat == null) {
       _lastResponse = "⚠️ Primero carga un modelo";
@@ -92,6 +96,37 @@ class GemmaViewModel extends ChangeNotifier {
                 "✅ Venta creada por ${items.length} producto(s) - Total: $total Bs";
             notifyListeners();
             if (onSaleCreated != null) onSaleCreated(sale);
+          } else if (response.name == 'createPurchase') {
+            final args = response.args;
+            final items = (args['items'] as List)
+                .map(
+                  (item) => PurchaseItem(
+                    productId: item['product_id'],
+                    quantity: (item['quantity'] as num).toInt(),
+                    unitCost: (item['unit_cost'] as num).toDouble(),
+                    subtotal:
+                        (item['quantity'] as num).toInt() *
+                        (item['unit_cost'] as num).toDouble(),
+                    locationId: 'MAIN',
+                  ),
+                )
+                .toList();
+
+            final total = items.fold(0.0, (sum, item) => sum + item.subtotal);
+
+            final purchase = Purchase(
+              purchaseId: '',
+              supplierName: args['supplier_name'] ?? 'Proveedor General',
+              items: items,
+              total: total,
+              status: 'CONFIRMED',
+              createdAt: DateTime.now(),
+            );
+            await _createPurchase.call(purchase);
+            _lastResponse =
+                "✅ Compra creada: ${purchase.supplierName} - ${items.length} producto(s) - Total: $total Bs";
+            notifyListeners();
+            if (onPurchaseCreated != null) onPurchaseCreated(purchase);
           } else if (response.name == 'createProduct') {
             final args = response.args;
             final product = Product(

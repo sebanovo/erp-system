@@ -1,13 +1,18 @@
 import 'package:app_ia_llm/domain/repositories/product_repository.dart';
+import 'package:app_ia_llm/domain/repositories/purchase_repository.dart';
 import 'package:app_ia_llm/domain/repositories/sale_repository.dart';
 import 'package:app_ia_llm/domain/usecases/create_customer.dart';
 import 'package:app_ia_llm/domain/usecases/create_product.dart';
+import 'package:app_ia_llm/domain/usecases/create_purchase.dart';
 import 'package:app_ia_llm/domain/usecases/create_sale.dart';
 import 'package:app_ia_llm/infrastructure/datasources/product_remote_datasource.dart';
+import 'package:app_ia_llm/infrastructure/datasources/purchase_remote_datasource.dart';
 import 'package:app_ia_llm/infrastructure/datasources/sale_remote_datasource.dart';
 import 'package:app_ia_llm/infrastructure/repositories/product_repository_impl.dart';
+import 'package:app_ia_llm/infrastructure/repositories/purchase_repository_impl.dart';
 import 'package:app_ia_llm/infrastructure/repositories/sale_repository_impl.dart';
 import 'package:app_ia_llm/presentation/viewmodels/products_viewmodel.dart';
+import 'package:app_ia_llm/presentation/viewmodels/purchases_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
@@ -80,5 +85,25 @@ Future<void> init() async {
   // ViewModels
   sl.registerFactory(
     () => SalesViewModel(sl<SaleRepository>(), sl<CreateSale>()),
+  );
+
+  // PURCHASE
+  // Dentro de init(), agregar:
+  // Data sources
+  sl.registerLazySingleton<PurchaseRemoteDataSource>(
+    () => PurchaseRemoteDataSourceImpl(sl()),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<PurchaseRepository>(
+    () => PurchaseRepositoryImpl(sl()),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => CreatePurchase(sl<PurchaseRepository>()));
+
+  // ViewModels
+  sl.registerFactory(
+    () => PurchasesViewModel(sl<PurchaseRepository>(), sl<CreatePurchase>()),
   );
 }
