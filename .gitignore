@@ -46,3 +46,6 @@ app.*.map.json
 
 # Ignorar los modelos
 /assets/models/**/*
+
+# Ignorar variables de entorno
+.env
