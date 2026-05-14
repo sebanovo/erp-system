@@ -1,13 +1,30 @@
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:file_picker/file_picker.dart';
 
+class CreateCustomerTool {
+  static const Tool spec = Tool(
+    name: 'createCustomer',
+    description: 'Creates a new customer in the ERP system.',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string", "description": "Full name of the customer."},
+        "email": {"type": "string", "description": "Email address."},
+        "phone": {"type": "string", "description": "Phone number."},
+        "address": {"type": "string", "description": "Physical address."},
+        "document": {"type": "string", "description": "Tax ID or document."},
+      },
+      "required": ["name"],
+    },
+  );
+}
+
 class GemmaHelper {
   static InferenceModel? _model;
-  static InferenceChat? _chat;
   static bool _isReady = false;
-  static String? _lastModelName; // inutilizable
 
   static bool get isReady => _isReady;
+  static InferenceModel? get model => _model;
 
   static Future<void> loadModelFromFile() async {
     final result = await FilePicker.pickFiles(
@@ -18,74 +35,42 @@ class GemmaHelper {
 
     final path = result.files.single.path!;
     final name = result.files.single.name;
-    _lastModelName = name;
 
-    // Instalar si no existe
-    final installed = await FlutterGemma.isModelInstalled(name);
-    if (!installed) {
-      await FlutterGemma.installModel(
-        modelType: ModelType.gemmaIt,
-      ).fromFile(path).install();
-    }
+    print("📁 Archivo seleccionado: $name");
+    print("📁 Ruta: $path");
 
-    // Crear modelo (usar CPU para compatibilidad)
-    final plugin = FlutterGemmaPlugin.instance;
-    _model = await plugin.createModel(
-      modelType: ModelType.gemmaIt,
-      preferredBackend: PreferredBackend.cpu,
+    // 1. PRIMERO: Instalar el modelo (esto lo hace disponible para getActiveModel)
+    print("🔄 Instalando modelo...");
+    await FlutterGemma.installModel(
+      modelType: ModelType.qwen,
+    ).fromFile(path).install();
+    print("✅ Modelo instalado correctamente");
+
+    // 2. SEGUNDO: Verificar que se instaló
+    final isInstalled = await FlutterGemma.isModelInstalled(name);
+    print("📦 ¿Modelo instalado en caché? $isInstalled");
+
+    // 3. TERCERO: Obtener el modelo activo
+    print("🔄 Obteniendo modelo activo...");
+    _model = await FlutterGemma.getActiveModel(
       maxTokens: 2048,
+      preferredBackend: PreferredBackend.cpu,
     );
-    _chat = await _model!.createChat();
+
     _isReady = true;
+    print("✅ Modelo listo para usar");
   }
 
-  static Future<String> promptToJson(String userInput) async {
-    if (!_isReady || _chat == null) {
+  static Future<InferenceChat> createChatWithTools() async {
+    if (!_isReady || _model == null) {
       throw Exception(
-        "Modelo no cargado. Selecciona un archivo .task primero.",
+        "Modelo no cargado. Asegúrate de haber seleccionado un archivo .task",
       );
     }
-
-    String prompt =
-        """
-You are a JSON engine for an ERP system.
-Given a natural language instruction, output ONLY a valid JSON object with the following structure:
-
-{
-  "tool": "sales|customer|product|inventory|purchase",
-  "action": "create|update|delete|query",
-  "data": { ... }
-}
-
-Examples:
-Input: "Cliente Juan compró azúcar a 20 Bs"
-Output: {"tool":"sales","action":"create","data":{"customer":"Juan","product":"azúcar","price":20,"currency":"Bs"}}
-
-Input: "Registrar nuevo producto arroz a 2.5 Bs"
-Output: {"tool":"product","action":"create","data":{"name":"arroz","price":2.5,"currency":"Bs"}}
-
-Now process: $userInput
-"""; // el error es userInput dice Const variables must be initialized with a constant value.
-    // Try changing the initializer to be a constant expression.dartconst_initialized_with_non_constant_value
-
-    await _chat!.clearHistory();
-    await _chat!.addQueryChunk(Message.text(text: prompt, isUser: true));
-    String full = "";
-    await _chat!.generateChatResponseAsync().listen((resp) {
-      if (resp is TextResponse) full += resp.token;
-    }).asFuture();
-    return _sanitize(full);
-  }
-
-  static String _sanitize(String raw) {
-    var clean = raw.trim();
-    if (clean.startsWith('```json')) clean = clean.substring(7);
-    if (clean.startsWith('```')) clean = clean.substring(3);
-    if (clean.endsWith('```')) clean = clean.substring(0, clean.length - 3);
-    clean = clean.trim();
-    final start = clean.indexOf('{');
-    final end = clean.lastIndexOf('}');
-    if (start != -1 && end != -1) clean = clean.substring(start, end + 1);
-    return clean;
+    return await _model!.createChat(
+      tools: [CreateCustomerTool.spec],
+      toolChoice: ToolChoice.auto,
+      supportsFunctionCalls: true,
+    );
   }
 }

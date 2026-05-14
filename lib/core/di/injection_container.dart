@@ -1,3 +1,4 @@
+import 'package:app_ia_llm/domain/usecases/create_customer.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
@@ -33,4 +34,6 @@ Future<void> init() async {
   sl.registerLazySingleton(
     () => GemmaViewModel(),
   ); // Singleton para mantener el modelo cargado
+  // Agregar al final de init()
+  sl.registerLazySingleton(() => CreateCustomer(sl<CustomerRepository>()));
 }

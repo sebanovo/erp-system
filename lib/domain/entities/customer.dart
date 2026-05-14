@@ -4,6 +4,7 @@ class Customer {
   final String? email;
   final String? phone;
   final String? address;
+  final String? document;
   final bool isActive;
 
   Customer({
@@ -12,6 +13,7 @@ class Customer {
     this.email,
     this.phone,
     this.address,
+    this.document,
     required this.isActive,
   });
 }

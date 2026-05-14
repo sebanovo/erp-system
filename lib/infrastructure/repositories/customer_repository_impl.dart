@@ -11,4 +11,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final models = await dataSource.getCustomers();
     return models.map((m) => m.toDomain()).toList();
   }
+
+  @override
+  Future<void> create(Customer customer) async {
+    await dataSource.createCustomer(customer);
+  }
 }
