@@ -1,4 +1,5 @@
 import 'package:app_ia_llm/domain/entities/customer.dart';
+import 'package:app_ia_llm/domain/entities/product.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,8 +7,13 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../viewmodels/gemma_viewmodel.dart';
 
 class AiChatDialog extends StatefulWidget {
-  const AiChatDialog({super.key, this.onCustomerCreated});
+  const AiChatDialog({
+    super.key,
+    this.onCustomerCreated,
+    this.onProductCreated,
+  });
   final Function(Customer)? onCustomerCreated;
+  final Function(Product)? onProductCreated;
 
   @override
   State<AiChatDialog> createState() => _AiChatDialogState();

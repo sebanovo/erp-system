@@ -1,4 +1,9 @@
+import 'package:app_ia_llm/domain/repositories/product_repository.dart';
 import 'package:app_ia_llm/domain/usecases/create_customer.dart';
+import 'package:app_ia_llm/domain/usecases/create_product.dart';
+import 'package:app_ia_llm/infrastructure/datasources/product_remote_datasource.dart';
+import 'package:app_ia_llm/infrastructure/repositories/product_repository_impl.dart';
+import 'package:app_ia_llm/presentation/viewmodels/products_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
@@ -36,4 +41,21 @@ Future<void> init() async {
   ); // Singleton para mantener el modelo cargado
   // Agregar al final de init()
   sl.registerLazySingleton(() => CreateCustomer(sl<CustomerRepository>()));
+  // PRODUCTOS
+  sl.registerLazySingleton<ProductRemoteDataSource>(
+    () => ProductRemoteDataSourceImpl(sl()),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<ProductRepository>(
+    () => ProductRepositoryImpl(sl()),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => CreateProduct(sl<ProductRepository>()));
+
+  // ViewModels
+  sl.registerFactory(
+    () => ProductsViewModel(sl<ProductRepository>(), sl<CreateProduct>()),
+  );
 }

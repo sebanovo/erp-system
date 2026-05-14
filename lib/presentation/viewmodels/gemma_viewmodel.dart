@@ -1,3 +1,5 @@
+import 'package:app_ia_llm/domain/entities/product.dart';
+import 'package:app_ia_llm/domain/usecases/create_product.dart';
 import 'package:app_ia_llm/utils/gemma_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
@@ -7,6 +9,7 @@ import '../../domain/usecases/create_customer.dart';
 
 class GemmaViewModel extends ChangeNotifier {
   final CreateCustomer _createCustomer = GetIt.instance<CreateCustomer>();
+  final CreateProduct _createProduct = GetIt.instance<CreateProduct>();
 
   bool _isModelReady = false;
   String _lastResponse = "";
@@ -20,7 +23,6 @@ class GemmaViewModel extends ChangeNotifier {
   Future<void> loadModel() async {
     try {
       await GemmaHelper.loadModelFromFile();
-      // ✅ Crear chat CON las herramientas
       _chat = await GemmaHelper.createChatWithTools();
       _isModelReady = true;
       _lastResponse = "✅ Modelo cargado correctamente";
@@ -34,6 +36,7 @@ class GemmaViewModel extends ChangeNotifier {
   Future<void> processCommand(
     String userInput, {
     Function(Customer)? onCustomerCreated,
+    Function(Product)? onProductCreated, // ✅ Agregado
   }) async {
     if (!_isModelReady || _chat == null) {
       _lastResponse = "⚠️ Primero carga un modelo";
@@ -49,13 +52,33 @@ class GemmaViewModel extends ChangeNotifier {
       await _chat!.clearHistory();
       await _chat!.addQueryChunk(Message.text(text: userInput, isUser: true));
 
-      // ✅ Escuchar respuesta - puede ser FunctionCallResponse o TextResponse
       await _chat!.generateChatResponseAsync().listen((response) async {
         if (response is FunctionCallResponse) {
           print("📞 Function call: ${response.name}");
           print("📦 Arguments: ${response.args}");
 
-          if (response.name == 'createCustomer') {
+          if (response.name == 'createProduct') {
+            final args = response.args;
+            final product = Product(
+              productId: '',
+              sku: args['sku'] ?? '',
+              name: args['name'] ?? '',
+              description: args['description'],
+              category: args['category'],
+              unit: args['unit'],
+              price: (args['price'] ?? 0).toDouble(),
+              cost: (args['cost'] ?? 0).toDouble(),
+              isActive: true,
+              metadata: {},
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+            await _createProduct.call(product);
+            // ✅ Usar _lastResponse en lugar de _conversationHistory
+            _lastResponse = "✅ Producto creado: ${product.name}";
+            notifyListeners();
+            if (onProductCreated != null) onProductCreated(product);
+          } else if (response.name == 'createCustomer') {
             final args = response.args;
             final customer = Customer(
               id: '',
@@ -68,8 +91,8 @@ class GemmaViewModel extends ChangeNotifier {
             );
             await _createCustomer.call(customer);
             _lastResponse = "✅ Cliente creado: ${customer.name}";
-            if (onCustomerCreated != null) onCustomerCreated(customer);
             notifyListeners();
+            if (onCustomerCreated != null) onCustomerCreated(customer);
           } else {
             _lastResponse = "⚠️ Función desconocida: ${response.name}";
             notifyListeners();
@@ -95,7 +118,6 @@ class GemmaViewModel extends ChangeNotifier {
     _lastResponse = "";
     _isProcessing = false;
     notifyListeners();
-
     print("✅ Modelo descargado de memoria");
   }
 

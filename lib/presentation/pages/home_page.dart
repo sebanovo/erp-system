@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/ai_chat_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatelessWidget {
   final Widget child;
@@ -8,11 +8,22 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child, // la página actual (customers, products...)
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.chat),
-        onPressed: () =>
-            showDialog(context: context, builder: (_) => const AiChatDialog()),
+      body: child,
+      bottomNavigationBar: NavigationBar(
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.people), label: "Clientes"),
+          NavigationDestination(
+            icon: Icon(Icons.inventory),
+            label: "Productos",
+          ),
+        ],
+        onDestinationSelected: (index) {
+          if (index == 0) {
+            context.go('/customers');
+          } else if (index == 1) {
+            context.go('/products');
+          }
+        },
       ),
     );
   }

@@ -36,6 +36,11 @@ El sistema requiere un modelo de lenguaje local para funcionar offline. Descárg
    ```bash
    ls -lh assets/models/
    ```
+5. **Generar los jsons:**
+   ```bash
+   dart run build_runner build --delete-conflicting-outputs
+   flutt pub run build_runner build --delete-conflicting-outputs
+   ```
 
 > ⚠️ **Nota:** El modelo pesa aproximadamente 1.2-1.8 GB. Asegúrate de tener suficiente espacio y una conexión estable.
 

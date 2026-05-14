@@ -19,6 +19,29 @@ class CreateCustomerTool {
   );
 }
 
+class CreateProductTool {
+  static const Tool spec = Tool(
+    name: 'createProduct',
+    description: 'Creates a new product in the ERP system.',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string", "description": "Product name."},
+        "sku": {"type": "string", "description": "Unique SKU identifier."},
+        "price": {"type": "number", "description": "Selling price."},
+        "cost": {"type": "number", "description": "Cost price."},
+        "description": {
+          "type": "string",
+          "description": "Product description.",
+        },
+        "category": {"type": "string", "description": "Product category."},
+        "unit": {"type": "string", "description": "Unit of measurement."},
+      },
+      "required": ["name", "sku", "price"],
+    },
+  );
+}
+
 class GemmaHelper {
   static InferenceModel? _model;
   static bool _isReady = false;
@@ -68,7 +91,7 @@ class GemmaHelper {
       );
     }
     return await _model!.createChat(
-      tools: [CreateCustomerTool.spec],
+      tools: [CreateCustomerTool.spec, CreateProductTool.spec],
       toolChoice: ToolChoice.auto,
       supportsFunctionCalls: true,
     );
