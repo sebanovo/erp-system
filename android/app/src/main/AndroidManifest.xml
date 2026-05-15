@@ -25,6 +25,7 @@
         android:usesCleartextTraffic="true"
         android:label="app_ia_llm"
         android:name="${applicationName}"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

@@ -15,11 +15,13 @@ class AiChatDialog extends StatefulWidget {
     this.onProductCreated,
     this.onSaleCreated,
     this.onPurchaseCreated,
+    this.onInventoryAdjusted,
   });
   final Function(Customer)? onCustomerCreated;
   final Function(Product)? onProductCreated;
   final Function(Sale)? onSaleCreated;
   final Function(Purchase)? onPurchaseCreated; // ← Agregar
+  final VoidCallback? onInventoryAdjusted; // ← Agregar
 
   @override
   State<AiChatDialog> createState() => _AiChatDialogState();
@@ -43,7 +45,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
   Future<void> _initSpeech() async {
     await _speech.initialize(
       onStatus: (status) {
-        print("Speech status: $status");
         if (status == 'notAvailable') {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -53,7 +54,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
         }
       },
       onError: (error) {
-        print("Speech error: $error");
         setState(() => _isListening = false);
       },
     );
@@ -84,10 +84,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
         pauseFor: const Duration(seconds: 30), // ← Pausa larga de 30 segundos
         partialResults: true,
         localeId: "es_ES",
-        onSoundLevelChange: (level) {
-          // Opcional: puedes usar esto para animaciones
-          // print("Nivel de sonido: $level");
-        },
+        onSoundLevelChange: (level) {},
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -567,10 +564,12 @@ class _AiChatDialogState extends State<AiChatDialog> {
 
     await gemmaVM.processCommand(
       text,
-      onCustomerCreated: widget.onCustomerCreated, // DUDOSO
+      // TODO: revisar luego
+      onCustomerCreated: widget.onCustomerCreated,
       onProductCreated: widget.onProductCreated,
       onSaleCreated: widget.onSaleCreated,
-      onPurchaseCreated: widget.onPurchaseCreated, // ← Agregar
+      onPurchaseCreated: widget.onPurchaseCreated,
+      onInventoryAdjusted: widget.onInventoryAdjusted,
     );
 
     setState(() => _loading = false);

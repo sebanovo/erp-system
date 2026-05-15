@@ -140,10 +140,7 @@ class CustomersPage extends StatelessWidget {
               child: AiChatDialog(
                 // ✅ Callback para refrescar la lista cuando se cree un cliente
                 onCustomerCreated: (newCustomer) {
-                  print("Cliente creado: ${newCustomer.name}");
-                  // Refrescar la lista de clientes
                   context.read<CustomersViewModel>().load();
-                  // Mostrar confirmación
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text("✅ Cliente ${newCustomer.name} creado"),

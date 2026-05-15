@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -108,6 +109,36 @@ class CreatePurchaseTool {
   );
 }
 
+class AdjustInventoryTool {
+  static const Tool spec = Tool(
+    name: 'adjustInventory',
+    description: 'Adjusts stock of a product (increase or decrease).',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "product_id": {"type": "string", "description": "Product ID."},
+        "type": {
+          "type": "string",
+          "enum": ["IN", "OUT"],
+          "description":
+              "Type of adjustment: IN (add stock) or OUT (remove stock).",
+        },
+        "quantity": {"type": "number", "description": "Quantity to adjust."},
+        "reason": {
+          "type": "string",
+          "description":
+              "Reason for adjustment (e.g., MANUAL_ADJUSTMENT, INITIAL_STOCK, etc.).",
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional note about the adjustment.",
+        },
+      },
+      "required": ["product_id", "type", "quantity", "reason"],
+    },
+  );
+}
+
 class GemmaHelper {
   static InferenceModel? _model;
   static bool _isReady = false;
@@ -125,29 +156,26 @@ class GemmaHelper {
     final path = result.files.single.path!;
     final name = result.files.single.name;
 
-    print("📁 Archivo seleccionado: $name");
-    print("📁 Ruta: $path");
-
-    // 1. PRIMERO: Instalar el modelo (esto lo hace disponible para getActiveModel)
-    print("🔄 Instalando modelo...");
+    // 1. PRIMERO: Instalar el modelo
     await FlutterGemma.installModel(
-      modelType: ModelType.qwen,
+      modelType: ModelType.qwen, // Qwen2.5
     ).fromFile(path).install();
-    print("✅ Modelo instalado correctamente");
 
     // 2. SEGUNDO: Verificar que se instaló
     final isInstalled = await FlutterGemma.isModelInstalled(name);
-    print("📦 ¿Modelo instalado en caché? $isInstalled");
+    debugPrint("#################################");
+    debugPrint("Modelo instalado en caché? $isInstalled");
+    debugPrint("#################################");
 
+    debugPrint("🔄 Obteniendo modelo activo...");
     // 3. TERCERO: Obtener el modelo activo
-    print("🔄 Obteniendo modelo activo...");
     _model = await FlutterGemma.getActiveModel(
       maxTokens: 2048,
       preferredBackend: PreferredBackend.cpu,
     );
 
     _isReady = true;
-    print("✅ Modelo listo para usar");
+    debugPrint("✅ Modelo listo para usar");
   }
 
   static Future<InferenceChat> createChatWithTools() async {
@@ -162,9 +190,18 @@ class GemmaHelper {
         CreateProductTool.spec,
         CreateSaleTool.spec,
         CreatePurchaseTool.spec,
+        AdjustInventoryTool.spec,
       ],
       toolChoice: ToolChoice.auto,
       supportsFunctionCalls: true,
+      systemInstruction: """
+      Eres un asistente de ERP. Trabajas sobre 5 módulos:
+      - Cliente
+      - Producto
+      - Ventas
+      - Compras
+      - Inventario
+      """,
     );
   }
 }

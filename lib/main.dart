@@ -6,9 +6,10 @@ import 'core/di/injection_container.dart' as di;
 import 'core/routes/app_router.dart';
 import 'presentation/viewmodels/gemma_viewmodel.dart';
 import 'presentation/viewmodels/customers_viewmodel.dart';
-import 'presentation/viewmodels/products_viewmodel.dart'; // ← Agregar
-import 'presentation/viewmodels/sales_viewmodel.dart'; // ← Agregar
+import 'presentation/viewmodels/products_viewmodel.dart';
+import 'presentation/viewmodels/sales_viewmodel.dart';
 import 'presentation/viewmodels/purchases_viewmodel.dart';
+import 'presentation/viewmodels/inventory_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<GemmaViewModel>()),
         ChangeNotifierProvider(
           create: (_) => di.sl<PurchasesViewModel>()..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => di.sl<InventoryViewModel>()..load(),
         ),
       ],
       child: MaterialApp.router(

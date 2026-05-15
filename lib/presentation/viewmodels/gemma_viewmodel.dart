@@ -1,6 +1,9 @@
+import 'package:app_ia_llm/domain/entities/customer.dart';
+import 'package:app_ia_llm/domain/usecases/create_customer.dart';
 import 'package:app_ia_llm/domain/entities/product.dart';
 import 'package:app_ia_llm/domain/entities/purchase.dart';
 import 'package:app_ia_llm/domain/entities/sale.dart';
+import 'package:app_ia_llm/domain/usecases/adjust_inventory.dart';
 import 'package:app_ia_llm/domain/usecases/create_product.dart';
 import 'package:app_ia_llm/domain/usecases/create_purchase.dart';
 import 'package:app_ia_llm/domain/usecases/create_sale.dart';
@@ -8,14 +11,13 @@ import 'package:app_ia_llm/utils/gemma_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:get_it/get_it.dart';
-import '../../domain/entities/customer.dart';
-import '../../domain/usecases/create_customer.dart';
 
 class GemmaViewModel extends ChangeNotifier {
   final CreateCustomer _createCustomer = GetIt.instance<CreateCustomer>();
   final CreateProduct _createProduct = GetIt.instance<CreateProduct>();
   final CreateSale _createSale = GetIt.instance<CreateSale>();
   final CreatePurchase _createPurchase = GetIt.instance<CreatePurchase>();
+  final AdjustInventory _adjustInventory = GetIt.instance<AdjustInventory>();
 
   bool _isModelReady = false;
   String _lastResponse = "";
@@ -42,9 +44,10 @@ class GemmaViewModel extends ChangeNotifier {
   Future<void> processCommand(
     String userInput, {
     Function(Customer)? onCustomerCreated,
-    Function(Product)? onProductCreated, // ✅ Agregado
+    Function(Product)? onProductCreated,
     Function(Sale)? onSaleCreated,
-    Function(Purchase)? onPurchaseCreated, // ← Agregar
+    Function(Purchase)? onPurchaseCreated,
+    VoidCallback? onInventoryAdjusted,
   }) async {
     if (!_isModelReady || _chat == null) {
       _lastResponse = "⚠️ Primero carga un modelo";
@@ -62,9 +65,6 @@ class GemmaViewModel extends ChangeNotifier {
 
       await _chat!.generateChatResponseAsync().listen((response) async {
         if (response is FunctionCallResponse) {
-          print("📞 Function call: ${response.name}");
-          print("📦 Arguments: ${response.args}");
-
           if (response.name == 'createSale') {
             final args = response.args;
             final items = (args['items'] as List)
@@ -96,6 +96,19 @@ class GemmaViewModel extends ChangeNotifier {
                 "✅ Venta creada por ${items.length} producto(s) - Total: $total Bs";
             notifyListeners();
             if (onSaleCreated != null) onSaleCreated(sale);
+          } else if (response.name == 'adjustInventory') {
+            final args = response.args;
+            await _adjustInventory.call(
+              productId: args['product_id'],
+              type: args['type'],
+              quantity: (args['quantity'] as num).toInt(),
+              reason: args['reason'],
+              note: args['note'],
+            );
+            _lastResponse =
+                "✅ Stock ajustado: ${args['type'] == 'IN' ? '+' : '-'}${args['quantity']} unidades del producto ${args['product_id']}";
+            notifyListeners();
+            if (onInventoryAdjusted != null) onInventoryAdjusted();
           } else if (response.name == 'createPurchase') {
             final args = response.args;
             final items = (args['items'] as List)
@@ -134,8 +147,8 @@ class GemmaViewModel extends ChangeNotifier {
               sku: args['sku'] ?? '',
               name: args['name'] ?? '',
               description: args['description'],
-              category: args['category'],
-              unit: args['unit'],
+              category: args['category'] ?? 'General',
+              unit: args['unit'] ?? 'unit',
               price: (args['price'] ?? 0).toDouble(),
               cost: (args['cost'] ?? 0).toDouble(),
               isActive: true,
@@ -188,7 +201,6 @@ class GemmaViewModel extends ChangeNotifier {
     _lastResponse = "";
     _isProcessing = false;
     notifyListeners();
-    print("✅ Modelo descargado de memoria");
   }
 
   void clearResponse() {

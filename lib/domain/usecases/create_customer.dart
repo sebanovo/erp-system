@@ -6,7 +6,6 @@ class CreateCustomer {
   CreateCustomer(this.repository);
 
   Future<void> call(Customer customer) async {
-    // Asume que tu repositorio tiene un método create
     await repository.create(customer);
   }
 }
