@@ -1,4 +1,4 @@
-import 'package:app_ia_llm/domain/entities/customer.dart';
+import 'package:erp_mobile/domain/entities/customer.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../constants/api_constants.dart';

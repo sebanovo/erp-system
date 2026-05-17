@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import '../../../domain/entities/customer.dart';
 
-part 'customer_model.g.dart'; // el error es acá: Target of URI hasn't been generated: 'package:app_ia_llm/infrastructure/models/customer_model.g.dart'.
+part 'customer_model.g.dart'; // el error es acá: Target of URI hasn't been generated: 'package:erp_mobile/infrastructure/models/customer_model.g.dart'.
 // Try running the generator that will generate the file referenced by the URI.darturi_has_not_been_generated
 
 @JsonSerializable()

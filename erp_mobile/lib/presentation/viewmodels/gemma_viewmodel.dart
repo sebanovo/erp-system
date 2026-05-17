@@ -1,11 +1,11 @@
-// import 'package:app_ia_llm/domain/entities/product.dart';
-// import 'package:app_ia_llm/domain/entities/purchase.dart';
-// import 'package:app_ia_llm/domain/entities/sale.dart';
-// import 'package:app_ia_llm/domain/usecases/adjust_inventory.dart';
-// import 'package:app_ia_llm/domain/usecases/create_product.dart';
-// import 'package:app_ia_llm/domain/usecases/create_purchase.dart';
-// import 'package:app_ia_llm/domain/usecases/create_sale.dart';
-// import 'package:app_ia_llm/utils/gemma_helper.dart';
+// import 'package:erp_mobile/domain/entities/product.dart';
+// import 'package:erp_mobile/domain/entities/purchase.dart';
+// import 'package:erp_mobile/domain/entities/sale.dart';
+// import 'package:erp_mobile/domain/usecases/adjust_inventory.dart';
+// import 'package:erp_mobile/domain/usecases/create_product.dart';
+// import 'package:erp_mobile/domain/usecases/create_purchase.dart';
+// import 'package:erp_mobile/domain/usecases/create_sale.dart';
+// import 'package:erp_mobile/utils/gemma_helper.dart';
 // import 'package:flutter/material.dart';
 // import 'package:flutter_gemma/flutter_gemma.dart';
 // import 'package:get_it/get_it.dart';
@@ -224,14 +224,14 @@
 //   }
 // }
 
-import 'package:app_ia_llm/domain/entities/product.dart';
-import 'package:app_ia_llm/domain/entities/purchase.dart';
-import 'package:app_ia_llm/domain/entities/sale.dart';
-import 'package:app_ia_llm/domain/usecases/adjust_inventory.dart';
-import 'package:app_ia_llm/domain/usecases/create_product.dart';
-import 'package:app_ia_llm/domain/usecases/create_purchase.dart';
-import 'package:app_ia_llm/domain/usecases/create_sale.dart';
-import 'package:app_ia_llm/utils/gemma_helper.dart';
+import 'package:erp_mobile/domain/entities/product.dart';
+import 'package:erp_mobile/domain/entities/purchase.dart';
+import 'package:erp_mobile/domain/entities/sale.dart';
+import 'package:erp_mobile/domain/usecases/adjust_inventory.dart';
+import 'package:erp_mobile/domain/usecases/create_product.dart';
+import 'package:erp_mobile/domain/usecases/create_purchase.dart';
+import 'package:erp_mobile/domain/usecases/create_sale.dart';
+import 'package:erp_mobile/utils/gemma_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:get_it/get_it.dart';

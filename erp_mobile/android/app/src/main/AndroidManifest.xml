@@ -23,7 +23,7 @@
 
     <application
         android:usesCleartextTraffic="true"
-        android:label="app_ia_llm"
+        android:label="erp_mobile"
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">

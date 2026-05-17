@@ -1,7 +1,7 @@
-import 'package:app_ia_llm/domain/entities/customer.dart';
-import 'package:app_ia_llm/domain/entities/product.dart';
-import 'package:app_ia_llm/domain/entities/purchase.dart';
-import 'package:app_ia_llm/domain/entities/sale.dart';
+import 'package:erp_mobile/domain/entities/customer.dart';
+import 'package:erp_mobile/domain/entities/product.dart';
+import 'package:erp_mobile/domain/entities/purchase.dart';
+import 'package:erp_mobile/domain/entities/sale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';

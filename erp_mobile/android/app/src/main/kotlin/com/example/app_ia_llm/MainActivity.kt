@@ -1,4 +1,4 @@
-package com.example.app_ia_llm
+package com.example.erp_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

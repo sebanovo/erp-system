@@ -1,6 +1,6 @@
 {
-    "name": "app_ia_llm",
-    "short_name": "app_ia_llm",
+    "name": "erp_mobile",
+    "short_name": "erp_mobile",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

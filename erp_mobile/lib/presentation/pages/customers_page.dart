@@ -1,4 +1,4 @@
-import 'package:app_ia_llm/presentation/viewmodels/gemma_viewmodel.dart';
+import 'package:erp_mobile/presentation/viewmodels/gemma_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/customers_viewmodel.dart';

@@ -1,4 +1,4 @@
-import 'package:app_ia_llm/presentation/pages/sales_page.dart';
+import 'package:erp_mobile/presentation/pages/sales_page.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/pages/home_page.dart';
 import '../../presentation/pages/customers_page.dart';
