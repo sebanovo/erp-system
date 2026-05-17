@@ -1,0 +1,344 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless ERP MVP with API Gateway, Lambda and DynamoDB.
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+    - x86_64
+    Environment:
+      Variables:
+        CUSTOMERS_TABLE:
+          Ref: CustomersTable
+        PRODUCTS_TABLE:
+          Ref: ProductsTable
+        INVENTORY_TABLE:
+          Ref: InventoryTable
+        PURCHASES_TABLE:
+          Ref: PurchasesTable
+        SALES_TABLE:
+          Ref: SalesTable
+        INVENTORY_MOVEMENTS_TABLE:
+          Ref: InventoryMovementsTable
+Resources:
+  ServerlessErpApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: '''GET,POST,PATCH,DELETE,OPTIONS'''
+        AllowHeaders: '''Content-Type,Authorization'''
+        AllowOrigin: '''*'''
+    Metadata:
+      SamResourceId: ServerlessErpApi
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: health/app.lambda_handler
+      Events:
+        Health:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /health
+            Method: GET
+    Metadata:
+      SamResourceId: HealthFunction
+  CustomersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: customers/app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: CustomersTable
+      Events:
+        CreateCustomer:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /customers
+            Method: POST
+        ListCustomers:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /customers
+            Method: GET
+        SearchCustomers:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /customers/search
+            Method: GET
+        UpdateCustomer:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /customers/{customerId}
+            Method: PATCH
+        DeleteCustomer:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /customers/{customerId}
+            Method: DELETE
+    Metadata:
+      SamResourceId: CustomersFunction
+  ProductsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: products/app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ProductsTable
+      Events:
+        CreateProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /products
+            Method: POST
+        ListProducts:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /products
+            Method: GET
+        SearchProducts:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /products/search
+            Method: GET
+        UpdateProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /products/{productId}
+            Method: PATCH
+        DeleteProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /products/{productId}
+            Method: DELETE
+    Metadata:
+      SamResourceId: ProductsFunction
+  InventoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: inventory/app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InventoryTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InventoryMovementsTable
+      Events:
+        ListInventory:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /inventory
+            Method: GET
+        GetInventory:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /inventory/{productId}
+            Method: GET
+        LowStock:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /inventory/low-stock
+            Method: GET
+        CreateAdjustment:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /inventory/adjustments
+            Method: POST
+    Metadata:
+      SamResourceId: InventoryFunction
+  PurchasesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: purchases/app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ProductsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InventoryTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PurchasesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InventoryMovementsTable
+      Events:
+        CreatePurchase:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /purchases
+            Method: POST
+        ListPurchases:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /purchases
+            Method: GET
+    Metadata:
+      SamResourceId: PurchasesFunction
+  SalesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: sales/app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: CustomersTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ProductsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InventoryTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SalesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InventoryMovementsTable
+      Events:
+        CreateSale:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /sales
+            Method: POST
+        ListSales:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /sales
+            Method: GET
+        SalesByCustomer:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /sales/by-customer/{customerId}
+            Method: GET
+    Metadata:
+      SamResourceId: SalesFunction
+  CustomersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: customerId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: customerId
+        KeyType: HASH
+    Metadata:
+      SamResourceId: CustomersTable
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: productId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: productId
+        KeyType: HASH
+    Metadata:
+      SamResourceId: ProductsTable
+  InventoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: productId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: productId
+        KeyType: HASH
+    Metadata:
+      SamResourceId: InventoryTable
+  PurchasesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: purchaseId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: purchaseId
+        KeyType: HASH
+    Metadata:
+      SamResourceId: PurchasesTable
+  SalesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: saleId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: saleId
+        KeyType: HASH
+    Metadata:
+      SamResourceId: SalesTable
+  InventoryMovementsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: movementId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: movementId
+        KeyType: HASH
+    Metadata:
+      SamResourceId: InventoryMovementsTable
+Outputs:
+  ServerlessErpApiUrl:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessErpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
