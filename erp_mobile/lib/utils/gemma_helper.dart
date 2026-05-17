@@ -139,6 +139,20 @@ class AdjustInventoryTool {
   );
 }
 
+String initialPrompt = """
+Eres un asistente de ERP. Trabajas sobre 5 módulos:
+- Cliente
+- Producto
+- Ventas
+- Compras
+- Inventario
+IMPORTANTE:
+- Si el usuario pide múltiples acciones en un solo mensaje, responde con ParallelFunctionCallResponse
+- Ejecuta las acciones en el orden solicitado
+- Ejemplo: "crea un cliente Juan, luego un producto Manzana, luego una venta" → usa ParallelFunctionCallResponse
+- No omitas pasos intermedios
+""";
+
 class GemmaHelper {
   static InferenceModel? _model;
   static bool _isReady = false;
@@ -158,7 +172,7 @@ class GemmaHelper {
 
     // 1. PRIMERO: Instalar el modelo
     await FlutterGemma.installModel(
-      modelType: ModelType.qwen, // Qwen2.5
+      modelType: ModelType.functionGemma, // Qwen2.5
     ).fromFile(path).install();
 
     // 2. SEGUNDO: Verificar que se instaló
@@ -194,14 +208,7 @@ class GemmaHelper {
       ],
       toolChoice: ToolChoice.auto,
       supportsFunctionCalls: true,
-      systemInstruction: """
-      Eres un asistente de ERP. Trabajas sobre 5 módulos:
-      - Cliente
-      - Producto
-      - Ventas
-      - Compras
-      - Inventario
-      """,
+      systemInstruction: initialPrompt,
     );
   }
 }

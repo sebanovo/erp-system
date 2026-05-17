@@ -20,8 +20,8 @@ class AiChatDialog extends StatefulWidget {
   final Function(Customer)? onCustomerCreated;
   final Function(Product)? onProductCreated;
   final Function(Sale)? onSaleCreated;
-  final Function(Purchase)? onPurchaseCreated; // ← Agregar
-  final VoidCallback? onInventoryAdjusted; // ← Agregar
+  final Function(Purchase)? onPurchaseCreated;
+  final VoidCallback? onInventoryAdjusted;
 
   @override
   State<AiChatDialog> createState() => _AiChatDialogState();
@@ -35,6 +35,29 @@ class _AiChatDialogState extends State<AiChatDialog> {
   bool _confirmingUnload = false;
   late stt.SpeechToText _speech;
 
+  // ✅ Método para mostrar notificaciones
+  void _showNotification(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,15 +69,15 @@ class _AiChatDialogState extends State<AiChatDialog> {
     await _speech.initialize(
       onStatus: (status) {
         if (status == 'notAvailable') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("El reconocimiento de voz no está disponible"),
-            ),
+          _showNotification(
+            "El reconocimiento de voz no está disponible",
+            isError: true,
           );
         }
       },
       onError: (error) {
         setState(() => _isListening = false);
+        _showNotification("Error en el micrófono", isError: true);
       },
     );
   }
@@ -63,16 +86,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
     bool available = await _speech.initialize();
     if (available) {
       setState(() => _isListening = true);
-
-      // Mostrar indicador visual
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "🎤 Escuchando... Presiona el micrófono nuevamente para detener",
-          ),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _showNotification("🎤 Escuchando... Habla ahora", isError: false);
 
       _speech.listen(
         onResult: (result) {
@@ -80,17 +94,16 @@ class _AiChatDialogState extends State<AiChatDialog> {
             _controller.text = result.recognizedWords;
           });
         },
-        listenFor: const Duration(days: 365), // ← Sin límite práctico
-        pauseFor: const Duration(seconds: 30), // ← Pausa larga de 30 segundos
+        listenFor: const Duration(days: 365),
+        pauseFor: const Duration(seconds: 30),
         partialResults: true,
         localeId: "es_ES",
         onSoundLevelChange: (level) {},
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("No se pudo inicializar el reconocimiento de voz"),
-        ),
+      _showNotification(
+        "No se pudo inicializar el reconocimiento de voz",
+        isError: true,
       );
     }
   }
@@ -98,13 +111,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
   void _stopListening() {
     _speech.stop();
     setState(() => _isListening = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("🔴 Grabación detenida"),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    _showNotification("🔴 Grabación detenida", isError: false);
   }
 
   void _scrollToBottom() {
@@ -149,26 +156,14 @@ class _AiChatDialogState extends State<AiChatDialog> {
     if (shouldUnload == true) {
       await gemmaVM.unloadModel();
       _controller.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Modelo descargado. Usa 'Cargar Modelo' para volver a cargarlo",
-          ),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      _showNotification("Modelo descargado de memoria", isError: false);
     }
   }
 
   void _clearChat(GemmaViewModel gemmaVM) {
     gemmaVM.clearResponse();
     _controller.clear();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Conversación limpiada"),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    _showNotification("Conversación limpiada", isError: false);
   }
 
   @override
@@ -196,7 +191,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header - Fijo en la parte superior
+            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
               child: Row(
@@ -216,7 +211,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                   const SizedBox(width: 10),
                   _buildStatusIndicator(gemmaVM),
                   const Spacer(),
-                  // Botón para limpiar conversación
                   if (gemmaVM.isModelReady && gemmaVM.lastResponse.isNotEmpty)
                     IconButton(
                       icon: const Icon(Icons.delete_sweep, size: 20),
@@ -227,7 +221,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
-                  // Botón para quitar modelo
                   if (gemmaVM.isModelReady)
                     IconButton(
                       icon: _confirmingUnload
@@ -247,7 +240,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                 ],
               ),
             ),
-            // Área de respuesta con scroll
+            // Área de respuesta
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -268,7 +261,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Encabezado
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -306,7 +298,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                           ],
                         ),
                       ),
-                      // Contenido con scroll
                       Expanded(
                         child: SingleChildScrollView(
                           controller: _scrollController,
@@ -352,13 +343,12 @@ class _AiChatDialogState extends State<AiChatDialog> {
                 ),
               ),
             ),
-            // Campo de texto y botones - Parte inferior fija
+            // Campo de texto y botones
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Campo de texto con micrófono
                   Row(
                     children: [
                       Expanded(
@@ -397,7 +387,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Botón de micrófono (ahora con indicador visual)
                       Stack(
                         alignment: Alignment.center,
                         children: [
@@ -443,7 +432,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Botones de acción
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -459,6 +447,10 @@ class _AiChatDialogState extends State<AiChatDialog> {
                               : () async {
                                   await gemmaVM.loadModel();
                                   setState(() {});
+                                  _showNotification(
+                                    "Modelo cargado correctamente",
+                                    isError: false,
+                                  );
                                 },
                           icon: const Icon(Icons.download, size: 18),
                           label: const Text("Cargar Modelo"),
@@ -553,7 +545,10 @@ class _AiChatDialogState extends State<AiChatDialog> {
 
   Future<void> _sendMessage(GemmaViewModel gemmaVM) async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty) {
+      _showNotification("Por favor escribe un mensaje", isError: true);
+      return;
+    }
 
     HapticFeedback.lightImpact();
 
@@ -562,17 +557,59 @@ class _AiChatDialogState extends State<AiChatDialog> {
       _controller.clear();
     });
 
-    await gemmaVM.processCommand(
-      text,
-      // TODO: revisar luego
-      onCustomerCreated: widget.onCustomerCreated,
-      onProductCreated: widget.onProductCreated,
-      onSaleCreated: widget.onSaleCreated,
-      onPurchaseCreated: widget.onPurchaseCreated,
-      onInventoryAdjusted: widget.onInventoryAdjusted,
-    );
-
-    setState(() => _loading = false);
-    _scrollToBottom();
+    try {
+      await gemmaVM.processCommand(
+        text,
+        onCustomerCreated: (customer) {
+          _showNotification(
+            "✅ Cliente ${customer.name} creado exitosamente",
+            isError: false,
+          );
+          if (widget.onCustomerCreated != null) {
+            widget.onCustomerCreated!(customer);
+          }
+        },
+        onProductCreated: (product) {
+          _showNotification(
+            "✅ Producto ${product.name} creado exitosamente",
+            isError: false,
+          );
+          if (widget.onProductCreated != null) {
+            widget.onProductCreated!(product);
+          }
+        },
+        onSaleCreated: (sale) {
+          _showNotification(
+            "✅ Venta creada - Total: ${sale.total} Bs",
+            isError: false,
+          );
+          if (widget.onSaleCreated != null) widget.onSaleCreated!(sale);
+        },
+        onPurchaseCreated: (purchase) {
+          _showNotification(
+            "✅ Compra creada - Proveedor: ${purchase.supplierName}",
+            isError: false,
+          );
+          if (widget.onPurchaseCreated != null) {
+            widget.onPurchaseCreated!(purchase);
+          }
+        },
+        onInventoryAdjusted: () {
+          _showNotification(
+            "✅ Inventario ajustado correctamente",
+            isError: false,
+          );
+          if (widget.onInventoryAdjusted != null) widget.onInventoryAdjusted!();
+        },
+      );
+    } catch (e) {
+      _showNotification(
+        "❌ Error: ${e.toString().substring(0, 100)}",
+        isError: true,
+      );
+    } finally {
+      setState(() => _loading = false);
+      _scrollToBottom();
+    }
   }
 }
