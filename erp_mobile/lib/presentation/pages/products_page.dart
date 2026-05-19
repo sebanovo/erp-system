@@ -194,6 +194,7 @@ class ProductsPage extends StatelessWidget {
   void _showProductDetail(BuildContext context, product) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

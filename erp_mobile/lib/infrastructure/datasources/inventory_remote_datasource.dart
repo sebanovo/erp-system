@@ -57,12 +57,12 @@ class InventoryRemoteDataSourceImpl implements InventoryRemoteDataSource {
     String? note,
   }) async {
     final body = {
-      "product_id": productId,
-      "location_id": locationId ?? "MAIN",
+      "productId": productId,
+      "locationId": locationId ?? "MAIN",
       "type": type,
       "quantity": quantity,
       "reason": reason,
-      "min_stock": ?minStock,
+      "minStock": ?minStock,
       "note": ?note,
     };
     final response = await apiClient.post(

@@ -5,16 +5,19 @@ part 'inventory_model.g.dart';
 
 @JsonSerializable()
 class InventoryItemModel {
-  @JsonKey(name: 'product_id')
+  @JsonKey(name: 'productId')
   final String productId;
-  @JsonKey(name: 'on_hand')
+  @JsonKey(name: 'stock', defaultValue: 0)
   final int onHand;
+  @JsonKey(defaultValue: 0)
   final int reserved;
+  @JsonKey(defaultValue: 0)
   final int available;
-  @JsonKey(name: 'min_stock')
+  @JsonKey(name: 'minStock', defaultValue: 0)
   final int minStock;
+  @JsonKey(defaultValue: 'AVAILABLE')
   final String status;
-  @JsonKey(name: 'updated_at')
+  @JsonKey(name: 'updatedAt')
   final DateTime updatedAt;
 
   InventoryItemModel({
@@ -44,19 +47,19 @@ class InventoryItemModel {
 
 @JsonSerializable()
 class InventoryMovementModel {
-  @JsonKey(name: 'movement_id')
+  @JsonKey(name: 'movementId')
   final String movementId;
-  @JsonKey(name: 'product_id')
+  @JsonKey(name: 'productId')
   final String productId;
   final String type;
   final String reason;
   final int quantity;
-  @JsonKey(name: 'previous_on_hand')
+  @JsonKey(name: 'previous_on_hand', defaultValue: 0)
   final int previousOnHand;
-  @JsonKey(name: 'new_on_hand')
+  @JsonKey(name: 'new_on_hand', defaultValue: 0)
   final int newOnHand;
   final String? note;
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'createdAt')
   final DateTime createdAt;
 
   InventoryMovementModel({

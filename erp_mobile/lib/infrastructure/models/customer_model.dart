@@ -6,13 +6,14 @@ part 'customer_model.g.dart'; // el error es acá: Target of URI hasn't been gen
 
 @JsonSerializable()
 class CustomerModel {
-  @JsonKey(name: 'customer_id')
+  @JsonKey(name: 'customerId')
   final String id;
   final String name;
   final String? email;
   final String? phone;
   final String? address;
-  @JsonKey(name: 'is_active')
+  final String? document;
+  @JsonKey(name: 'isActive', defaultValue: true)
   final bool isActive;
 
   CustomerModel({
@@ -21,6 +22,7 @@ class CustomerModel {
     this.email,
     this.phone,
     this.address,
+    this.document,
     required this.isActive,
   });
 
@@ -34,6 +36,7 @@ class CustomerModel {
     email: email,
     phone: phone,
     address: address,
+    document: document,
     isActive: isActive,
   );
 }

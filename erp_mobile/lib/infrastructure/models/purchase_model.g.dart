@@ -8,40 +8,40 @@ part of 'purchase_model.dart';
 
 PurchaseItemModel _$PurchaseItemModelFromJson(Map<String, dynamic> json) =>
     PurchaseItemModel(
-      productId: json['product_id'] as String,
+      productId: json['productId'] as String,
       quantity: (json['quantity'] as num).toInt(),
-      unitCost: (json['unit_cost'] as num).toDouble(),
+      unitCost: (json['unitCost'] as num).toDouble(),
       subtotal: (json['subtotal'] as num).toDouble(),
-      locationId: json['location_id'] as String?,
+      locationId: json['locationId'] as String?,
     );
 
 Map<String, dynamic> _$PurchaseItemModelToJson(PurchaseItemModel instance) =>
     <String, dynamic>{
-      'product_id': instance.productId,
+      'productId': instance.productId,
       'quantity': instance.quantity,
-      'unit_cost': instance.unitCost,
+      'unitCost': instance.unitCost,
       'subtotal': instance.subtotal,
-      'location_id': instance.locationId,
+      'locationId': instance.locationId,
     };
 
 PurchaseModel _$PurchaseModelFromJson(Map<String, dynamic> json) =>
     PurchaseModel(
-      purchaseId: json['purchase_id'] as String,
-      supplierName: json['supplier_name'] as String,
+      purchaseId: json['purchaseId'] as String,
+      supplierName: json['supplierName'] as String,
       items: (json['items'] as List<dynamic>)
           .map((e) => PurchaseItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       total: (json['total'] as num).toDouble(),
-      status: json['status'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      status: json['status'] as String? ?? 'COMPLETED',
+      createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
 Map<String, dynamic> _$PurchaseModelToJson(PurchaseModel instance) =>
     <String, dynamic>{
-      'purchase_id': instance.purchaseId,
-      'supplier_name': instance.supplierName,
+      'purchaseId': instance.purchaseId,
+      'supplierName': instance.supplierName,
       'items': instance.items,
       'total': instance.total,
       'status': instance.status,
-      'created_at': instance.createdAt.toIso8601String(),
+      'createdAt': instance.createdAt.toIso8601String(),
     };

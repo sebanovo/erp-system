@@ -7,7 +7,7 @@ part of 'product_model.dart';
 // **************************************************************************
 
 ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
-  productId: json['product_id'] as String,
+  productId: json['productId'] as String,
   sku: json['sku'] as String,
   name: json['name'] as String,
   description: json['description'] as String?,
@@ -15,15 +15,15 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
   unit: json['unit'] as String?,
   price: (json['price'] as num).toDouble(),
   cost: (json['cost'] as num).toDouble(),
-  isActive: json['is_active'] as bool,
+  isActive: json['isActive'] as bool? ?? true,
   metadata: json['metadata'] as Map<String, dynamic>?,
-  createdAt: DateTime.parse(json['created_at'] as String),
-  updatedAt: DateTime.parse(json['updated_at'] as String),
+  createdAt: DateTime.parse(json['createdAt'] as String),
+  updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
     <String, dynamic>{
-      'product_id': instance.productId,
+      'productId': instance.productId,
       'sku': instance.sku,
       'name': instance.name,
       'description': instance.description,
@@ -31,8 +31,8 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'unit': instance.unit,
       'price': instance.price,
       'cost': instance.cost,
-      'is_active': instance.isActive,
+      'isActive': instance.isActive,
       'metadata': instance.metadata,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
+      'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
     };

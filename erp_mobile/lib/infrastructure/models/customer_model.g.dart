@@ -8,20 +8,22 @@ part of 'customer_model.dart';
 
 CustomerModel _$CustomerModelFromJson(Map<String, dynamic> json) =>
     CustomerModel(
-      id: json['customer_id'] as String,
+      id: json['customerId'] as String,
       name: json['name'] as String,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
       address: json['address'] as String?,
-      isActive: json['is_active'] as bool,
+      document: json['document'] as String?,
+      isActive: json['isActive'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$CustomerModelToJson(CustomerModel instance) =>
     <String, dynamic>{
-      'customer_id': instance.id,
+      'customerId': instance.id,
       'name': instance.name,
       'email': instance.email,
       'phone': instance.phone,
       'address': instance.address,
-      'is_active': instance.isActive,
+      'document': instance.document,
+      'isActive': instance.isActive,
     };

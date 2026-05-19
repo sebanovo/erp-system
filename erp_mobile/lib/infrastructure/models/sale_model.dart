@@ -5,13 +5,13 @@ part 'sale_model.g.dart';
 
 @JsonSerializable()
 class SaleItemModel {
-  @JsonKey(name: 'product_id')
+  @JsonKey(name: 'productId')
   final String productId;
   final int quantity;
-  @JsonKey(name: 'unit_price')
+  @JsonKey(name: 'unitPrice')
   final double unitPrice;
   final double subtotal;
-  @JsonKey(name: 'location_id')
+  @JsonKey(name: 'locationId')
   final String? locationId;
 
   SaleItemModel({
@@ -37,14 +37,15 @@ class SaleItemModel {
 
 @JsonSerializable()
 class SaleModel {
-  @JsonKey(name: 'sale_id')
+  @JsonKey(name: 'saleId')
   final String saleId;
-  @JsonKey(name: 'customer_id')
+  @JsonKey(name: 'customerId')
   final String? customerId;
   final List<SaleItemModel> items;
   final double total;
+  @JsonKey(defaultValue: 'COMPLETED')
   final String status;
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'createdAt')
   final DateTime createdAt;
 
   SaleModel({

@@ -116,12 +116,12 @@ class AdjustInventoryTool {
     parameters: {
       "type": "object",
       "properties": {
-        "product_id": {"type": "string", "description": "Product ID."},
+        "productId": {"type": "string", "description": "Product ID."},
         "type": {
           "type": "string",
-          "enum": ["IN", "OUT"],
+          "enum": ["ADJUSTMENT_IN", "ADJUSTMENT_OUT"],
           "description":
-              "Type of adjustment: IN (add stock) or OUT (remove stock).",
+              "Type of adjustment: ADJUSTMENT_IN (add stock) or ADJUSTMENT_OUT (remove stock).",
         },
         "quantity": {"type": "number", "description": "Quantity to adjust."},
         "reason": {
@@ -134,23 +134,34 @@ class AdjustInventoryTool {
           "description": "Optional note about the adjustment.",
         },
       },
-      "required": ["product_id", "type", "quantity", "reason"],
+      "required": ["productId", "type", "quantity", "reason"],
     },
   );
 }
 
 String initialPrompt = """
-Eres un asistente de ERP. Trabajas sobre 5 módulos:
-- Cliente
-- Producto
-- Ventas
-- Compras
-- Inventario
-IMPORTANTE:
-- Si el usuario pide múltiples acciones en un solo mensaje, responde con ParallelFunctionCallResponse
-- Ejecuta las acciones en el orden solicitado
-- Ejemplo: "crea un cliente Juan, luego un producto Manzana, luego una venta" → usa ParallelFunctionCallResponse
-- No omitas pasos intermedios
+Eres un asistente de ERP con acceso a herramientas para gestionar:
+- Clientes (createCustomer)
+- Productos (createProduct)
+- Ventas (createSale)
+- Compras (createPurchase)
+- Inventario (adjustInventory)
+
+REGLAS OBLIGATORIAS:
+1. Cuando el usuario pida MÚLTIPLES acciones en un solo mensaje, DEBES responder con ParallelFunctionCallResponse que contenga TODAS las llamadas a herramientas.
+2. Mantén el orden exacto que el usuario solicitó.
+3. NUNCA generes las herramientas una tras otra como texto separado.
+4. SIEMPRE completa todas las herramientas antes de finalizar la respuesta.
+
+Ejemplo correcto:
+Usuario: "Crea un cliente Juan y un producto Manzana"
+Respuesta: ParallelFunctionCallResponse con 2 tool calls (createCustomer, createProduct)
+
+Ejemplo INCORRECTO:
+Usuario: "Crea un cliente Juan y un producto Manzana"
+Respuesta: createCustomer {...} createProduct {...} (texto separado)
+
+AHORA PROCESA LA SOLICITUD DEL USUARIO.
 """;
 
 class GemmaHelper {
@@ -172,7 +183,7 @@ class GemmaHelper {
 
     // 1. PRIMERO: Instalar el modelo
     await FlutterGemma.installModel(
-      modelType: ModelType.functionGemma, // Qwen2.5
+      modelType: ModelType.qwen, // Qwen2.5
     ).fromFile(path).install();
 
     // 2. SEGUNDO: Verificar que se instaló
@@ -184,7 +195,7 @@ class GemmaHelper {
     debugPrint("🔄 Obteniendo modelo activo...");
     // 3. TERCERO: Obtener el modelo activo
     _model = await FlutterGemma.getActiveModel(
-      maxTokens: 2048,
+      maxTokens: 4096,
       preferredBackend: PreferredBackend.cpu,
     );
 
@@ -206,7 +217,8 @@ class GemmaHelper {
         CreatePurchaseTool.spec,
         AdjustInventoryTool.spec,
       ],
-      toolChoice: ToolChoice.auto,
+      modelType: ModelType.qwen,
+      toolChoice: ToolChoice.required,
       supportsFunctionCalls: true,
       systemInstruction: initialPrompt,
     );

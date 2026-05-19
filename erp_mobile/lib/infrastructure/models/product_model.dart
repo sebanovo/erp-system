@@ -5,7 +5,7 @@ part 'product_model.g.dart';
 
 @JsonSerializable()
 class ProductModel {
-  @JsonKey(name: 'product_id')
+  @JsonKey(name: 'productId')
   final String productId;
   final String sku;
   final String name;
@@ -14,12 +14,12 @@ class ProductModel {
   final String? unit;
   final double price;
   final double cost;
-  @JsonKey(name: 'is_active')
+  @JsonKey(name: 'isActive', defaultValue: true)
   final bool isActive;
   final Map<String, dynamic>? metadata;
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'createdAt')
   final DateTime createdAt;
-  @JsonKey(name: 'updated_at')
+  @JsonKey(name: 'updatedAt')
   final DateTime updatedAt;
 
   ProductModel({

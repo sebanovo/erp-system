@@ -21,7 +21,7 @@ class InventoryItem {
 class InventoryMovement {
   final String movementId;
   final String productId;
-  final String type; // "IN" o "OUT"
+  final String type; // ADJUSTMENT_IN | ADJUSTMENT_OUT
   final String reason;
   final int quantity;
   final int previousOnHand;

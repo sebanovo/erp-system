@@ -244,7 +244,7 @@ class InventoryPage extends StatelessWidget {
                     (m) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        "${m.type == 'IN' ? '➕' : '➖'} ${m.quantity} unidades - ${m.reason} (${m.createdAt.toString().substring(0, 16)})",
+                        "${m.type == 'ADJUSTMENT_IN' ? '➕' : '➖'} ${m.quantity} unidades - ${m.reason} (${m.createdAt.toString().substring(0, 16)})",
                         style: const TextStyle(fontSize: 12),
                       ),
                     ),
