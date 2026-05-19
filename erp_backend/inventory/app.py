@@ -24,6 +24,8 @@ def lambda_handler(event, context):
             return get_low_stock()
         if method == "POST" and resource == "/inventory/adjustments":
             return create_adjustment(event)
+        if method == "GET" and resource == "/inventory/{productId}/movements":
+            return get_inventory_movements(event)
 
         return error("Route not found", 404)
     except Exception as exc:
@@ -97,3 +99,16 @@ def create_adjustment(event):
     movements_table.put_item(Item=movement)
 
     return success({"inventory": inventory_item, "movement": movement}, "Inventory adjusted", 201)
+
+
+def get_inventory_movements(event):
+    product_id = (event.get("pathParameters") or {}).get("productId")
+    if not product_id:
+        raise ValueError("productId is required")
+
+    response = table(MOVEMENTS_TABLE_ENV).scan(
+        FilterExpression=Attr("productId").eq(product_id)
+    )
+    items = response.get("Items", [])
+    items.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
+    return success(items, "Inventory movements retrieved")

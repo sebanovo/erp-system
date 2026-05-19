@@ -183,6 +183,13 @@ Resources:
               Ref: ServerlessErpApi
             Path: /inventory/adjustments
             Method: POST
+        GetInventoryMovements:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /inventory/{productId}/movements
+            Method: GET
     Metadata:
       SamResourceId: InventoryFunction
   PurchasesFunction:
