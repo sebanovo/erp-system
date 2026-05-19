@@ -18,6 +18,8 @@ def lambda_handler(event, context):
 
         if method == "POST" and resource == "/purchases":
             return create_purchase(event)
+        if method == "POST" and resource == "/purchases/quick":
+            return quick_purchase(event)
         if method == "GET" and resource == "/purchases":
             return list_purchases()
 
@@ -119,3 +121,80 @@ def list_purchases():
     items = scan_all(table(PURCHASES_TABLE_ENV))
     items.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
     return success(items, "Purchases retrieved")
+
+
+def quick_purchase(event):
+    body = parse_body(event)
+    require_fields(body, ["supplier_name", "product", "purchase"])
+    supplier_name = str(body["supplier_name"]).strip()
+    product_data = body["product"]
+    purchase_data = body["purchase"]
+
+    require_fields(product_data, ["name", "sku", "price", "cost"])
+    require_fields(purchase_data, ["quantity", "unit_cost"])
+
+    now = now_iso()
+
+    # Create Product
+    product_id = new_id("PROD")
+    product_item = {
+        "productId": product_id,
+        "sku": str(product_data["sku"]).strip(),
+        "name": str(product_data["name"]).strip(),
+        "description": str(product_data.get("description", "")).strip(),
+        "category": str(product_data.get("category", "")).strip(),
+        "unit": str(product_data.get("unit", "unit")).strip(),
+        "price": to_decimal(product_data["price"], "price"),
+        "cost": to_decimal(product_data["cost"], "cost"),
+        "isActive": True,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    table(PRODUCTS_TABLE_ENV).put_item(Item=product_item)
+
+    # Calculate Purchase
+    quantity = to_positive_int(purchase_data["quantity"], "quantity")
+    unit_cost = to_decimal(purchase_data["unit_cost"], "unit_cost")
+    subtotal = unit_cost * Decimal(quantity)
+
+    purchase_item = {
+        "purchaseId": new_id("PUR"),
+        "supplierName": supplier_name,
+        "items": [
+            {
+                "productId": product_id,
+                "productName": product_item["name"],
+                "quantity": quantity,
+                "unitCost": unit_cost,
+                "subtotal": subtotal,
+            }
+        ],
+        "total": subtotal,
+        "createdAt": now,
+    }
+    table(PURCHASES_TABLE_ENV).put_item(Item=purchase_item)
+
+    # Inventory Update
+    inventory_item = {
+        "productId": product_id,
+        "stock": quantity,
+        "minStock": 0,
+        "updatedAt": now,
+    }
+    table(INVENTORY_TABLE_ENV).put_item(Item=inventory_item)
+
+    movement = {
+        "movementId": new_id("MOV"),
+        "productId": product_id,
+        "type": "PURCHASE",
+        "quantity": quantity,
+        "reason": f"Quick Purchase {purchase_item['purchaseId']}",
+        "createdAt": now,
+    }
+    table(MOVEMENTS_TABLE_ENV).put_item(Item=movement)
+
+    return success({
+        "product": product_item,
+        "purchase": purchase_item,
+        "inventory": inventory_item
+    }, "Quick purchase created", 201)

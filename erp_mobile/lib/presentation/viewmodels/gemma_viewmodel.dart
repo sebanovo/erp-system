@@ -4,6 +4,8 @@ import 'package:erp_mobile/domain/entities/sale.dart';
 import 'package:erp_mobile/domain/usecases/adjust_inventory.dart';
 import 'package:erp_mobile/domain/usecases/create_product.dart';
 import 'package:erp_mobile/domain/usecases/create_purchase.dart';
+import 'package:erp_mobile/domain/usecases/create_quick_purchase.dart';
+import 'package:erp_mobile/domain/usecases/create_quick_sale.dart';
 import 'package:erp_mobile/domain/usecases/create_sale.dart';
 import 'package:erp_mobile/utils/gemma_helper.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,9 @@ class GemmaViewModel extends ChangeNotifier {
   final CreateSale _createSale = GetIt.instance<CreateSale>();
   final CreatePurchase _createPurchase = GetIt.instance<CreatePurchase>();
   final AdjustInventory _adjustInventory = GetIt.instance<AdjustInventory>();
+  final CreateQuickSale _createQuickSale = GetIt.instance<CreateQuickSale>();
+  final CreateQuickPurchase _createQuickPurchase =
+      GetIt.instance<CreateQuickPurchase>();
 
   bool _isModelReady = false;
   String _conversationHistory = "";
@@ -159,6 +164,50 @@ class GemmaViewModel extends ChangeNotifier {
         _conversationHistory +=
             "✅ Stock ajustado: ${args['type'] == 'ADJUSTMENT_IN' ? '+' : '-'}${args['quantity']} unidades\n";
         if (onInventoryAdjusted != null) onInventoryAdjusted();
+        break;
+
+      case 'quickSale':
+        // ✅ RECONSTRUIR la estructura anidada que espera el backend
+        final payload = {
+          "customer": {
+            "name": args['customer_name'],
+            "phone": args['customer_phone'],
+            "email": args['customer_email'],
+          },
+          "product": {
+            "name": args['product_name'],
+            "sku": args['product_sku'],
+            "price": args['product_price'],
+            "cost": args['product_cost'] ?? 0,
+          },
+          "sale": {
+            "quantity": args['sale_quantity'],
+            "unit_price": args['sale_unit_price'],
+          },
+        };
+
+        await _createQuickSale.call(payload);
+        _conversationHistory += "✅ Venta rápida registrada exitosamente\n";
+        break;
+
+      case 'quickPurchase':
+        // ✅ RECONSTRUIR la estructura anidada que espera el backend
+        final payload = {
+          "supplier_name": args['supplier_name'],
+          "product": {
+            "name": args['product_name'],
+            "sku": args['product_sku'],
+            "price": args['product_price'],
+            "cost": args['product_cost'],
+          },
+          "purchase": {
+            "quantity": args['purchase_quantity'],
+            "unit_cost": args['purchase_unit_cost'],
+          },
+        };
+
+        await _createQuickPurchase.call(payload);
+        _conversationHistory += "✅ Compra rápida registrada exitosamente\n";
         break;
 
       default:

@@ -225,6 +225,13 @@ Resources:
               Ref: ServerlessErpApi
             Path: /purchases
             Method: GET
+        QuickPurchase:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /purchases/quick
+            Method: POST
     Metadata:
       SamResourceId: PurchasesFunction
   SalesFunction:
@@ -270,6 +277,13 @@ Resources:
               Ref: ServerlessErpApi
             Path: /sales/by-customer/{customerId}
             Method: GET
+        QuickSale:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessErpApi
+            Path: /sales/quick
+            Method: POST
     Metadata:
       SamResourceId: SalesFunction
   CustomersTable:

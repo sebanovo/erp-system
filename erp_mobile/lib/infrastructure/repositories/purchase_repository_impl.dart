@@ -16,4 +16,9 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
   Future<void> create(Purchase purchase) async {
     await dataSource.createPurchase(purchase);
   }
+
+  @override
+  Future<void> createQuickPurchase(Map<String, dynamic> payload) async {
+    await dataSource.createQuickPurchase(payload);
+  }
 }

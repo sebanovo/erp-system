@@ -6,6 +6,8 @@ import 'package:erp_mobile/domain/usecases/adjust_inventory.dart';
 import 'package:erp_mobile/domain/usecases/create_customer.dart';
 import 'package:erp_mobile/domain/usecases/create_product.dart';
 import 'package:erp_mobile/domain/usecases/create_purchase.dart';
+import 'package:erp_mobile/domain/usecases/create_quick_purchase.dart';
+import 'package:erp_mobile/domain/usecases/create_quick_sale.dart';
 import 'package:erp_mobile/domain/usecases/create_sale.dart';
 import 'package:erp_mobile/infrastructure/datasources/inventory_remote_datasource.dart';
 import 'package:erp_mobile/infrastructure/datasources/product_remote_datasource.dart';
@@ -86,6 +88,7 @@ Future<void> init() async {
 
   // Use cases
   sl.registerLazySingleton(() => CreateSale(sl<SaleRepository>()));
+  sl.registerLazySingleton(() => CreateQuickSale(sl<SaleRepository>()));
 
   // ViewModels
   sl.registerFactory(
@@ -106,6 +109,7 @@ Future<void> init() async {
 
   // Use cases
   sl.registerLazySingleton(() => CreatePurchase(sl<PurchaseRepository>()));
+  sl.registerLazySingleton(() => CreateQuickPurchase(sl<PurchaseRepository>()));
 
   // ViewModels
   sl.registerFactory(

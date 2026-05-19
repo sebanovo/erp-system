@@ -19,6 +19,8 @@ def lambda_handler(event, context):
 
         if method == "POST" and resource == "/sales":
             return create_sale(event)
+        if method == "POST" and resource == "/sales/quick":
+            return quick_sale(event)
         if method == "GET" and resource == "/sales":
             return list_sales()
         if method == "GET" and resource == "/sales/by-customer/{customerId}":
@@ -142,3 +144,99 @@ def list_sales_by_customer(event):
     filtered = [sale for sale in items if sale.get("customerId") == customer_id]
     filtered.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
     return success(filtered, "Customer sales retrieved")
+
+def quick_sale(event):
+    body = parse_body(event)
+    require_fields(body, ["customer", "product", "sale"])
+
+    customer_data = body["customer"]
+    product_data = body["product"]
+    sale_data = body["sale"]
+
+    require_fields(customer_data, ["name"])
+    require_fields(product_data, ["name", "sku", "price", "cost"])
+    require_fields(sale_data, ["quantity", "unit_price"])
+
+    now = now_iso()
+
+    # Create Customer
+    customer_id = new_id("CUS")
+    customer_item = {
+        "customerId": customer_id,
+        "name": str(customer_data["name"]).strip(),
+        "document": str(customer_data.get("document", "")).strip(),
+        "phone": str(customer_data.get("phone", "")).strip(),
+        "email": str(customer_data.get("email", "")).strip(),
+        "address": str(customer_data.get("address", "")).strip(),
+        "isActive": True,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    table(CUSTOMERS_TABLE_ENV).put_item(Item=customer_item)
+
+    # Create Product
+    product_id = new_id("PROD")
+    product_item = {
+        "productId": product_id,
+        "sku": str(product_data["sku"]).strip(),
+        "name": str(product_data["name"]).strip(),
+        "description": str(product_data.get("description", "")).strip(),
+        "category": str(product_data.get("category", "")).strip(),
+        "unit": str(product_data.get("unit", "unit")).strip(),
+        "price": to_decimal(product_data["price"], "price"),
+        "cost": to_decimal(product_data["cost"], "cost"),
+        "isActive": True,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    table(PRODUCTS_TABLE_ENV).put_item(Item=product_item)
+
+    # Calculate Sale
+    quantity = to_positive_int(sale_data["quantity"], "quantity")
+    unit_price = to_decimal(sale_data["unit_price"], "unit_price")
+    subtotal = unit_price * Decimal(quantity)
+
+    sale_item = {
+        "saleId": new_id("SALE"),
+        "customerId": customer_id,
+        "customerName": customer_item["name"],
+        "items": [
+            {
+                "productId": product_id,
+                "productName": product_item["name"],
+                "quantity": quantity,
+                "unitPrice": unit_price,
+                "subtotal": subtotal,
+            }
+        ],
+        "total": subtotal,
+        "createdAt": now,
+    }
+    table(SALES_TABLE_ENV).put_item(Item=sale_item)
+
+    # Inventory Update
+    new_stock = -quantity
+    inventory_item = {
+        "productId": product_id,
+        "stock": new_stock,
+        "minStock": 0,
+        "updatedAt": now,
+    }
+    table(INVENTORY_TABLE_ENV).put_item(Item=inventory_item)
+
+    movement = {
+        "movementId": new_id("MOV"),
+        "productId": product_id,
+        "type": "SALE",
+        "quantity": -quantity,
+        "reason": f"Quick Sale {sale_item['saleId']}",
+        "createdAt": now,
+    }
+    table(MOVEMENTS_TABLE_ENV).put_item(Item=movement)
+
+    return success({
+        "customer": customer_item,
+        "product": product_item,
+        "sale": sale_item,
+        "inventory": inventory_item
+    }, "Quick sale created", 201)

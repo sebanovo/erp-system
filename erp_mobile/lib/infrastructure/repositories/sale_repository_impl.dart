@@ -16,4 +16,9 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<void> create(Sale sale) async {
     await dataSource.createSale(sale);
   }
+
+  @override
+  Future<void> createQuickSale(Map<String, dynamic> payload) async {
+    await dataSource.createQuickSale(payload);
+  }
 }

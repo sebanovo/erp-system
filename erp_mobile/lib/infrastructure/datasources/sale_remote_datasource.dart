@@ -6,6 +6,7 @@ import '../models/sale_model.dart';
 abstract class SaleRemoteDataSource {
   Future<List<SaleModel>> getSales();
   Future<void> createSale(Sale sale);
+  Future<void> createQuickSale(Map<String, dynamic> payload);
 }
 
 class SaleRemoteDataSourceImpl implements SaleRemoteDataSource {
@@ -41,6 +42,14 @@ class SaleRemoteDataSourceImpl implements SaleRemoteDataSource {
     final response = await apiClient.post(ApiConstants.sales, body);
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception("Error al crear venta: ${response.statusCode}");
+    }
+  }
+
+  @override
+  Future<void> createQuickSale(Map<String, dynamic> payload) async {
+    final response = await apiClient.post("${ApiConstants.sales}/quick", payload);
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception("Error al crear venta rapida: ${response.statusCode}");
     }
   }
 }

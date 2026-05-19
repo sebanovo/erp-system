@@ -6,6 +6,7 @@ import '../models/purchase_model.dart';
 abstract class PurchaseRemoteDataSource {
   Future<List<PurchaseModel>> getPurchases();
   Future<void> createPurchase(Purchase purchase);
+  Future<void> createQuickPurchase(Map<String, dynamic> payload);
 }
 
 class PurchaseRemoteDataSourceImpl implements PurchaseRemoteDataSource {
@@ -41,6 +42,14 @@ class PurchaseRemoteDataSourceImpl implements PurchaseRemoteDataSource {
     final response = await apiClient.post(ApiConstants.purchases, body);
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception("Error al crear compra: ${response.statusCode}");
+    }
+  }
+
+  @override
+  Future<void> createQuickPurchase(Map<String, dynamic> payload) async {
+    final response = await apiClient.post("${ApiConstants.purchases}/quick", payload);
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception("Error al crear compra rapida: ${response.statusCode}");
     }
   }
 }
