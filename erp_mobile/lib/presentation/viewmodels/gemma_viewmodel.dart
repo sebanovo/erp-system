@@ -46,7 +46,6 @@ class GemmaViewModel extends ChangeNotifier {
     }
   }
 
-  // ✅ Método auxiliar para ejecutar una función individual
   Future<void> _executeFunctionCall(
     FunctionCallResponse call, {
     Function(Customer)? onCustomerCreated,
@@ -167,7 +166,6 @@ class GemmaViewModel extends ChangeNotifier {
         break;
 
       case 'quickSale':
-        // ✅ RECONSTRUIR la estructura anidada que espera el backend
         final payload = {
           "customer": {
             "name": args['customer_name'],
@@ -191,7 +189,6 @@ class GemmaViewModel extends ChangeNotifier {
         break;
 
       case 'quickPurchase':
-        // ✅ RECONSTRUIR la estructura anidada que espera el backend
         final payload = {
           "supplier_name": args['supplier_name'],
           "product": {
@@ -232,7 +229,6 @@ class GemmaViewModel extends ChangeNotifier {
 
     _isProcessing = true;
 
-    // Agregar mensaje del usuario al historial
     _conversationHistory += "👤 **Tú:** $userInput\n\n";
     _conversationHistory += "🤖 **Asistente:** ";
     notifyListeners();
@@ -242,11 +238,9 @@ class GemmaViewModel extends ChangeNotifier {
       await _chat!.addQueryChunk(Message.text(text: userInput, isUser: true));
 
       await _chat!.generateChatResponseAsync().listen((response) async {
-        // 🔥 TASK CHAINING: Manejar múltiples llamadas en paralelo/secuencial
         if (response is ParallelFunctionCallResponse) {
           debugPrint("📞 Tareas encadenadas: ${response.calls.length}");
 
-          // Ejecutar cada función en orden secuencial
           for (final call in response.calls) {
             debugPrint("  - Ejecutando: ${call.name}");
             await _executeFunctionCall(
@@ -261,7 +255,6 @@ class GemmaViewModel extends ChangeNotifier {
           _conversationHistory += "\n✅ Todas las tareas completadas\n\n";
           notifyListeners();
         }
-        // Manejar llamada única
         else if (response is FunctionCallResponse) {
           await _executeFunctionCall(
             response,
@@ -273,14 +266,12 @@ class GemmaViewModel extends ChangeNotifier {
           );
           _conversationHistory += "\n\n";
         }
-        // Manejar respuesta de texto
         else if (response is TextResponse) {
           _conversationHistory += response.token;
           notifyListeners();
         }
       }).asFuture();
 
-      // Asegurar salto de línea al final
       if (!_conversationHistory.endsWith('\n\n')) {
         _conversationHistory += "\n\n";
       }
