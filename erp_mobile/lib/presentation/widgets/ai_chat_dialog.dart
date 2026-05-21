@@ -1,3 +1,4 @@
+import 'package:erp_mobile/utils/whisper_helper.dart';
 import 'package:erp_mobile/domain/entities/customer.dart';
 import 'package:erp_mobile/domain/entities/product.dart';
 import 'package:erp_mobile/domain/entities/purchase.dart';
@@ -5,7 +6,6 @@ import 'package:erp_mobile/domain/entities/sale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../viewmodels/gemma_viewmodel.dart';
 
 class AiChatDialog extends StatefulWidget {
@@ -31,11 +31,25 @@ class _AiChatDialogState extends State<AiChatDialog> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _loading = false;
-  bool _isListening = false;
+  bool _isRecording = false;
+  bool _isTranscribing = false;
   bool _confirmingUnload = false;
-  late stt.SpeechToText _speech;
 
-  // ✅ Método para mostrar notificaciones
+  @override
+  void initState() {
+    super.initState();
+    _initWhisper();
+  }
+
+  Future<void> _initWhisper() async {
+    try {
+      await WhisperHelper.initialize();
+      setState(() {});
+    } catch (e) {
+      _showNotification("Error al inicializar voz: $e", isError: true);
+    }
+  }
+
   void _showNotification(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -58,60 +72,38 @@ class _AiChatDialogState extends State<AiChatDialog> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _speech = stt.SpeechToText();
-    _initSpeech();
-  }
-
-  Future<void> _initSpeech() async {
-    await _speech.initialize(
-      onStatus: (status) {
-        if (status == 'notAvailable') {
-          _showNotification(
-            "El reconocimiento de voz no está disponible",
-            isError: true,
-          );
-        }
-      },
-      onError: (error) {
-        setState(() => _isListening = false);
-        _showNotification("Error en el micrófono", isError: true);
-      },
-    );
-  }
-
-  void _startListening() async {
-    bool available = await _speech.initialize();
-    if (available) {
-      setState(() => _isListening = true);
-      _showNotification("🎤 Escuchando... Habla ahora", isError: false);
-
-      _speech.listen(
-        onResult: (result) {
-          setState(() {
-            _controller.text = result.recognizedWords;
-          });
-        },
-        listenFor: const Duration(days: 365),
-        pauseFor: const Duration(seconds: 30),
-        partialResults: true,
-        localeId: "es_ES",
-        onSoundLevelChange: (level) {},
-      );
-    } else {
-      _showNotification(
-        "No se pudo inicializar el reconocimiento de voz",
-        isError: true,
-      );
+  Future<void> _startRecording() async {
+    try {
+      await WhisperHelper.startRecording();
+      setState(() => _isRecording = true);
+      _showNotification("🎙️ Grabando... Presiona nuevamente para detener");
+    } catch (e) {
+      _showNotification("Error al iniciar grabación: $e", isError: true);
     }
   }
 
-  void _stopListening() {
-    _speech.stop();
-    setState(() => _isListening = false);
-    _showNotification("🔴 Grabación detenida", isError: false);
+  Future<void> _stopRecordingAndTranscribe() async {
+    setState(() {
+      _isRecording = false;
+      _isTranscribing = true;
+    });
+
+    try {
+      final transcribedText = await WhisperHelper.stopRecordingAndTranscribe();
+
+      if (transcribedText != null && transcribedText.isNotEmpty) {
+        setState(() {
+          _controller.text = transcribedText;
+        });
+        _showNotification("✅ Audio transcrito correctamente");
+      } else {
+        _showNotification("No se pudo transcribir el audio", isError: true);
+      }
+    } catch (e) {
+      _showNotification("Error en transcripción: $e", isError: true);
+    } finally {
+      setState(() => _isTranscribing = false);
+    }
   }
 
   void _scrollToBottom() {
@@ -156,19 +148,82 @@ class _AiChatDialogState extends State<AiChatDialog> {
     if (shouldUnload == true) {
       await gemmaVM.unloadModel();
       _controller.clear();
-      _showNotification("Modelo descargado de memoria", isError: false);
+      _showNotification("Modelo descargado de memoria");
     }
   }
 
   void _clearChat(GemmaViewModel gemmaVM) {
     gemmaVM.clearResponse();
     _controller.clear();
-    _showNotification("Conversación limpiada", isError: false);
+    _showNotification("Conversación limpiada");
+  }
+
+  Future<void> _sendMessage(GemmaViewModel gemmaVM) async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      _showNotification("Por favor escribe un mensaje", isError: true);
+      return;
+    }
+
+    // ✅ Si el modelo no está cargado, mostrar mensaje y salir
+    if (!gemmaVM.isModelReady) {
+      _showNotification(
+        "⚠️ Primero carga un modelo usando el botón 'Cargar Modelo'",
+        isError: true,
+      );
+      return;
+    }
+
+    HapticFeedback.lightImpact();
+
+    setState(() {
+      _loading = true;
+      _controller.clear();
+    });
+
+    try {
+      await gemmaVM.processCommand(
+        text,
+        onCustomerCreated: (customer) {
+          _showNotification("✅ Cliente ${customer.name} creado exitosamente");
+          if (widget.onCustomerCreated != null)
+            widget.onCustomerCreated!(customer);
+        },
+        onProductCreated: (product) {
+          _showNotification("✅ Producto ${product.name} creado exitosamente");
+          if (widget.onProductCreated != null)
+            widget.onProductCreated!(product);
+        },
+        onSaleCreated: (sale) {
+          _showNotification("✅ Venta creada - Total: ${sale.total} Bs");
+          if (widget.onSaleCreated != null) widget.onSaleCreated!(sale);
+        },
+        onPurchaseCreated: (purchase) {
+          _showNotification(
+            "✅ Compra creada - Proveedor: ${purchase.supplierName}",
+          );
+          if (widget.onPurchaseCreated != null)
+            widget.onPurchaseCreated!(purchase);
+        },
+        onInventoryAdjusted: () {
+          _showNotification("✅ Inventario ajustado correctamente");
+          if (widget.onInventoryAdjusted != null) widget.onInventoryAdjusted!();
+        },
+      );
+    } catch (e) {
+      _showNotification(
+        "❌ Error: ${e.toString().substring(0, 100)}",
+        isError: true,
+      );
+    } finally {
+      setState(() => _loading = false);
+      _scrollToBottom();
+    }
   }
 
   @override
   void dispose() {
-    _speech.stop();
+    WhisperHelper.dispose();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -179,6 +234,12 @@ class _AiChatDialogState extends State<AiChatDialog> {
     final gemmaVM = Provider.of<GemmaViewModel>(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+    final isModelReady = gemmaVM.isModelReady;
+
+    // Actualizar estado local con el estado de WhisperHelper
+    if (_isRecording != WhisperHelper.isRecording) {
+      _isRecording = WhisperHelper.isRecording;
+    }
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -211,7 +272,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                   const SizedBox(width: 10),
                   _buildStatusIndicator(gemmaVM),
                   const Spacer(),
-                  if (gemmaVM.isModelReady && gemmaVM.lastResponse.isNotEmpty)
+                  if (isModelReady && gemmaVM.lastResponse.isNotEmpty)
                     IconButton(
                       icon: const Icon(Icons.delete_sweep, size: 20),
                       onPressed: _confirmingUnload
@@ -221,7 +282,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
-                  if (gemmaVM.isModelReady)
+                  if (isModelReady)
                     IconButton(
                       icon: _confirmingUnload
                           ? const SizedBox(
@@ -252,7 +313,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                     color: Colors.grey.shade900,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: gemmaVM.isModelReady
+                      color: isModelReady
                           ? Colors.deepPurple.shade300
                           : Colors.grey.shade700,
                       width: 1,
@@ -267,7 +328,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: gemmaVM.isModelReady
+                          color: isModelReady
                               ? Colors.deepPurple.shade800
                               : Colors.grey.shade800,
                           borderRadius: const BorderRadius.only(
@@ -280,7 +341,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                             Icon(
                               Icons.chat_bubble_outline,
                               size: 14,
-                              color: gemmaVM.isModelReady
+                              color: isModelReady
                                   ? Colors.deepPurple.shade200
                                   : Colors.grey.shade500,
                             ),
@@ -290,7 +351,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: gemmaVM.isModelReady
+                                color: isModelReady
                                     ? Colors.deepPurple.shade200
                                     : Colors.grey.shade500,
                               ),
@@ -315,15 +376,27 @@ class _AiChatDialogState extends State<AiChatDialog> {
                                       ),
                                       const SizedBox(height: 12),
                                       Text(
-                                        gemmaVM.isModelReady
-                                            ? "Escribe o habla para dar instrucciones"
-                                            : "Primero carga un modelo",
+                                        "Escribe o habla para dar instrucciones",
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           color: Colors.grey.shade500,
                                           fontSize: 13,
                                         ),
                                       ),
+                                      if (!isModelReady)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 8,
+                                          ),
+                                          child: Text(
+                                            "⚠️ Modelo no cargado. Usa 'Cargar Modelo' para comenzar",
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.orange.shade400,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
                                       const SizedBox(height: 20),
                                     ],
                                   ),
@@ -343,7 +416,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                 ),
               ),
             ),
-            // Campo de texto y botones
+            // ✅ Campo de texto y botones - SIEMPRE habilitados
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Column(
@@ -356,11 +429,11 @@ class _AiChatDialogState extends State<AiChatDialog> {
                           controller: _controller,
                           maxLines: 3,
                           minLines: 1,
-                          enabled: !_loading && gemmaVM.isModelReady,
+                          enabled:
+                              !_loading, // ✅ Siempre habilitado, independiente del modelo
                           decoration: InputDecoration(
-                            hintText: gemmaVM.isModelReady
-                                ? "Ej: Crea un cliente llamado Juan con teléfono 78592060"
-                                : "Primero carga un modelo",
+                            hintText:
+                                "Ej: Crea un cliente llamado Juan con teléfono 78592060",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
                             ),
@@ -387,48 +460,9 @@ class _AiChatDialogState extends State<AiChatDialog> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          if (_isListening)
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.red.shade700.withOpacity(0.2),
-                              ),
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: _isListening
-                                  ? Colors.red.shade700
-                                  : (gemmaVM.isModelReady
-                                        ? Colors.deepPurple
-                                        : Colors.grey),
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                _isListening ? Icons.mic : Icons.mic_none,
-                                color: Colors.white,
-                              ),
-                              onPressed: gemmaVM.isModelReady
-                                  ? (_isListening
-                                        ? _stopListening
-                                        : _startListening)
-                                  : null,
-                              tooltip: _isListening
-                                  ? "Detener grabación"
-                                  : "Usar voz",
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildMicrophoneButton(
+                        gemmaVM,
+                      ), // ✅ Siempre visible y funcional
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -440,7 +474,8 @@ class _AiChatDialogState extends State<AiChatDialog> {
                         child: const Text("Cerrar"),
                       ),
                       const SizedBox(width: 8),
-                      if (!gemmaVM.isModelReady)
+                      // Botón de cargar modelo (si no está listo)
+                      if (!isModelReady)
                         ElevatedButton.icon(
                           onPressed: gemmaVM.isProcessing
                               ? null
@@ -449,7 +484,6 @@ class _AiChatDialogState extends State<AiChatDialog> {
                                   setState(() {});
                                   _showNotification(
                                     "Modelo cargado correctamente",
-                                    isError: false,
                                   );
                                 },
                           icon: const Icon(Icons.download, size: 18),
@@ -458,9 +492,10 @@ class _AiChatDialogState extends State<AiChatDialog> {
                             backgroundColor: Colors.orange.shade700,
                           ),
                         ),
-                      if (gemmaVM.isModelReady)
+                      // Botón de enviar (si está listo)
+                      if (isModelReady)
                         ElevatedButton.icon(
-                          onPressed: (_loading || !gemmaVM.isModelReady)
+                          onPressed: (_loading || !isModelReady)
                               ? null
                               : () => _sendMessage(gemmaVM),
                           icon: const Icon(Icons.send, size: 18),
@@ -479,6 +514,69 @@ class _AiChatDialogState extends State<AiChatDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMicrophoneButton(GemmaViewModel gemmaVM) {
+    // ✅ Micrófono siempre funcional (no depende del modelo)
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        if (_isRecording)
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.red.shade700.withValues(alpha: 2),
+            ),
+            child: const CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          ),
+        if (_isTranscribing)
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.orange.shade700.withValues(alpha: 0.2),
+            ),
+            child: const CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          ),
+        Container(
+          decoration: BoxDecoration(
+            color: _isRecording
+                ? Colors.red.shade700
+                : (_isTranscribing
+                      ? Colors.orange.shade700
+                      : Colors.deepPurple),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: Icon(
+              _isRecording ? Icons.stop : Icons.mic,
+              color: Colors.white,
+            ),
+            onPressed: !_isTranscribing
+                ? () async {
+                    if (_isRecording) {
+                      await _stopRecordingAndTranscribe();
+                      setState(() {});
+                    } else {
+                      await _startRecording();
+                      setState(() {});
+                    }
+                  }
+                : null,
+            tooltip: _isRecording ? "Detener y transcribir" : "Grabar voz",
+          ),
+        ),
+      ],
     );
   }
 
@@ -541,75 +639,5 @@ class _AiChatDialogState extends State<AiChatDialog> {
         ],
       ),
     );
-  }
-
-  Future<void> _sendMessage(GemmaViewModel gemmaVM) async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) {
-      _showNotification("Por favor escribe un mensaje", isError: true);
-      return;
-    }
-
-    HapticFeedback.lightImpact();
-
-    setState(() {
-      _loading = true;
-      _controller.clear();
-    });
-
-    try {
-      await gemmaVM.processCommand(
-        text,
-        onCustomerCreated: (customer) {
-          _showNotification(
-            "✅ Cliente ${customer.name} creado exitosamente",
-            isError: false,
-          );
-          if (widget.onCustomerCreated != null) {
-            widget.onCustomerCreated!(customer);
-          }
-        },
-        onProductCreated: (product) {
-          _showNotification(
-            "✅ Producto ${product.name} creado exitosamente",
-            isError: false,
-          );
-          if (widget.onProductCreated != null) {
-            widget.onProductCreated!(product);
-          }
-        },
-        onSaleCreated: (sale) {
-          _showNotification(
-            "✅ Venta creada - Total: ${sale.total} Bs",
-            isError: false,
-          );
-          if (widget.onSaleCreated != null) widget.onSaleCreated!(sale);
-        },
-        onPurchaseCreated: (purchase) {
-          _showNotification(
-            "✅ Compra creada - Proveedor: ${purchase.supplierName}",
-            isError: false,
-          );
-          if (widget.onPurchaseCreated != null) {
-            widget.onPurchaseCreated!(purchase);
-          }
-        },
-        onInventoryAdjusted: () {
-          _showNotification(
-            "✅ Inventario ajustado correctamente",
-            isError: false,
-          );
-          if (widget.onInventoryAdjusted != null) widget.onInventoryAdjusted!();
-        },
-      );
-    } catch (e) {
-      _showNotification(
-        "❌ Error: ${e.toString().substring(0, 100)}",
-        isError: true,
-      );
-    } finally {
-      setState(() => _loading = false);
-      _scrollToBottom();
-    }
   }
 }

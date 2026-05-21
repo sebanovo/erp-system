@@ -23,7 +23,17 @@ Sistema ERP (Enterprise Resource Planning) con integración de inteligencia arti
 
 El sistema requiere un modelo de lenguaje local para funcionar offline. Descárgalo desde Google Drive:
 
-[🔗 **MODELO**](https://drive.google.com/drive/folders/1QqtKFIbqFQJJkcCAJiaO7qydY8W0whYX?usp=sharing)
+[LLM Model](https://drive.google.com/drive/folders/1QqtKFIbqFQJJkcCAJiaO7qydY8W0whYX?usp=sharing)
+
+### **DESCARGAR MODELO DE WHISPER (OBLIGATORIO)**
+Puedes obtener el modelo en:
+- [Official Whisper GGML Models](https://huggingface.co/ggerganov/whisper.cpp/tree/main)
+
+Puedes escoger entre cualquier modelo y colocarlo en assets/
+- `ggml-tiny.bin` — fastest for quick testing
+- `ggml-base.bin` or `ggml-base-q5_0.bin` — good default balance
+- `ggml-small-5_1.bin` — better accuracy with higher memory use
+- `ggml-large-v3-turbo-q5_0.bin` — best quality, heavier runtime and memory cost
 
 **Instrucciones:**
 1. Descarga el archivo del modelo (normalmente `.task`, `model.tflite` o `model.bin`)
