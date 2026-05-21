@@ -1,39 +1,75 @@
 # ERP Inteligente con IA - Sistema de Gestión Empresarial
 
-Sistema ERP (Enterprise Resource Planning) con integración de inteligencia artificial para gestión de clientes, productos, inventario y análisis predictivo. Desarrollado con Flutter para multiplataforma (Android, iOS, Web, Windows/macOS).
+Sistema ERP (Enterprise Resource Planning) con integración de inteligencia artificial para gestión de clientes, productos, ventas, compras e inventario. Desarrollado con Flutter para multiplataforma (Android, iOS, Web, Windows/macOS) con procesamiento **100% local y offline**.
 
 ## ✨ Características principales
 
-- 📊 Gestión de clientes y proveedores
-- 📦 Control de inventario y productos
-- 📈 Ventas y facturación
-- 🤖 Asistente IA para predicción de demanda y análisis
-- 📱 Cross-platform (móvil, escritorio, web)
-- 🔄 Sincronización en tiempo real
+- 👥 **Gestión de Clientes** - CRUD completo con búsqueda y filtros
+- 📦 **Gestión de Productos** - Control de SKU, precios, costos y categorías
+- 💰 **Módulo de Ventas** - Registro de ventas con actualización automática de inventario
+- 🛒 **Módulo de Compras** - Control de compras a proveedores
+- 📊 **Control de Inventario** - Stock en tiempo real, movimientos y ajustes
+- 🤖 **Asistente IA Local** - Procesamiento de lenguaje natural para operaciones del ERP
+- 🎤 **Reconocimiento de Voz Local** - Transcripción offline con Whisper
+- 📱 **Multiplataforma** - Android, iOS, Windows, macOS, Linux y Web
+- 🔒 **Privacidad Total** - Todo el procesamiento se realiza en el dispositivo
 
 ## 📋 Requisitos previos
 
-- **Flutter** 3.16.0 o superior
-- **Dart** 3.2.0 o superior
-- **Android Studio** / **VS Code** (opcional)
-- **Git** (para clonar el repositorio)
-- Espacio en disco: mínimo 500 MB (más 1.5 GB del modelo IA)
+| Requisito | Versión |
+|-----------|---------|
+| **Flutter** | 3.16.0 o superior |
+| **Dart** | 3.2.0 o superior |
+| **Android Studio / VS Code** | Opcional |
+| **Git** | Para clonar el repositorio |
+| **Espacio en disco** | Mínimo 500 MB + modelo IA (~1.5 GB) |
 
-### **DESCARGAR EL MODELO DE IA (OBLIGATORIO)**
+## 🤖 Modelos de IA Soportados
 
-El sistema requiere un modelo de lenguaje local para funcionar offline. Descárgalo desde Google Drive:
+### Modelos LLM (Procesamiento de lenguaje)
 
-[LLM Model](https://drive.google.com/drive/folders/1QqtKFIbqFQJJkcCAJiaO7qydY8W0whYX?usp=sharing)
+El plugin `flutter_gemma` soporta múltiples modelos. Puedes descargarlos desde:
 
-### **DESCARGAR MODELO DE WHISPER (OBLIGATORIO)**
-Puedes obtener el modelo en:
-- [Official Whisper GGML Models](https://huggingface.co/ggerganov/whisper.cpp/tree/main)
+[Gemma 4 E2B/E4B](https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm) (❌ Requiere buen telefono)
+[Gemma3n E2B/E4B](https://huggingface.co/google/gemma-3n-E2B-it-litert-preview) (❌ Requiere buen telefono)
+[FastVLM 0.5B](https://huggingface.co/litert-community/FastVLM-0.5B)  (❌ Requiere buen telefono)
+[Gemma-3 1B](https://huggingface.co/litert-community/Gemma3-1B-IT) (❌ Requiere buen telefono)
+[Gemma 3 270M](https://huggingface.co/litert-community/gemma-3-270m-it) (❌ Requiere buen telefono)
+[FunctionGemma 270M](https://huggingface.co/sasha-denisov/function-gemma-270M-it) (🟦 Muy tonto)
+[Qwen3 0.6B](https://huggingface.co/litert-community/Qwen3-0.6B) (🟧 Más o menos)
+[Qwen 2.5](https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct) (✅ Recomendado)
+[Phi-4 Mini](https://huggingface.co/litert-community/Phi-4-mini-instruct) (❌ Requiere buen telefono)
+[DeepSeek R1](https://huggingface.co/litert-community/DeepSeek-R1-Distill-Qwen-1.5B) (❌ Requiere buen telefono)
+[SmolLM 135M](https://huggingface.co/litert-community/SmolLM-135M-Instruct). (❌ Requiere buen telefono)
 
-Puedes escoger entre cualquier modelo y colocarlo en assets/
-- `ggml-tiny.bin` — fastest for quick testing
-- `ggml-base.bin` or `ggml-base-q5_0.bin` — good default balance
-- `ggml-small-5_1.bin` — better accuracy with higher memory use
-- `ggml-large-v3-turbo-q5_0.bin` — best quality, heavier runtime and memory cost
+### Tabla de modelos
+
+| Model Family | Best For | Function Calling | Thinking Mode | Vision | Languages | Size |
+|---|---|:---:|:---:|:---:|---|---|
+| **Gemma 4 E2B** | Next-gen multimodal chat — text, image, audio | ✅ | ✅ | ✅ | Multilingual | 2.4GB |
+| **Gemma 4 E4B** | Next-gen multimodal chat — text, image, audio | ✅ | ✅ | ✅ | Multilingual | 4.3GB |
+| **Gemma3n** | On-device multimodal chat and image analysis | ✅ | ❌ | ✅ | Multilingual | 3-6GB |
+| **FastVLM 0.5B** | Fast vision-language inference | ❌ | ❌ | ✅ | Multilingual | 0.5GB |
+| **Phi-4 Mini** | Advanced reasoning and instruction following | ✅ | ❌ | ❌ | Multilingual | 3.9GB |
+| **DeepSeek R1** | High-performance reasoning and code generation | ✅ | ✅ | ❌ | Multilingual | 1.7GB |
+| **Qwen3 0.6B** | Compact multilingual chat with function calling | ✅ | ✅ | ❌ | Multilingual | 586MB |
+| **Qwen 2.5** | Strong multilingual chat and instruction following | ✅ | ❌ | ❌ | Multilingual | 0.5-1.6GB |
+| **Gemma 3 1B** | Balanced and efficient text generation | ✅ | ❌ | ❌ | Multilingual | 0.5GB |
+| **Gemma 3 270M** | Ideal for fine-tuning (LoRA) for specific tasks | ❌ | ❌ | ❌ | Multilingual | 0.3GB |
+| **FunctionGemma 270M** | Specialized for function calling on-device | ✅ | ❌ | ❌ | Multilingual | 284MB |
+| **SmolLM 135M** | Ultra-compact, resource-constrained devices | ❌ | ❌ | ❌ | English | 135MB |
+| **TranslateGemma 4B** † | Single-shot 55-language translation | ❌ | ❌ | ❌ | 55 languages | 2-4GB |
+
+
+### 🎤 Modelo de Reconocimiento de Voz (Whisper)
+
+Puedes obtener el modelo en: [Official Whisper GGML Models](https://huggingface.co/ggerganov/whisper.cpp/tree/main)
+
+Puedes escoger entre cualquier modelo y colocarlo en assets/. Modelos disponibles.
+- `ggml-tiny.bin` — facil y rapido (✅ Recomendado)
+- `ggml-base.bin` o `ggml-base-q5_0.bin` — Buen balance (🟧 Sigue siendo bueno) 
+- `ggml-small-5_1.bin` — mayor precisión con mayor consumo de memoria  (❌ Lento) 
+- `ggml-large-v3-turbo-q5_0.bin` — mejor calidad, mayor tiempo de ejecución y consumo de memoria (❌ Tener buen telefono)
 
 **Instrucciones:**
 1. Descarga el archivo del modelo (normalmente `.task`, `model.tflite` o `model.bin`)
