@@ -25,7 +25,7 @@ class WhisperHelper {
   static Future<void> initialize() async {
     if (_isInitialized) return;
 
-    debugPrint("🎤 [WHISPER] Inicializando...");
+    debugPrint(" [WHISPER] Inicializando...");
 
     // Solicitar permiso de micrófono
     if (!await _recorder.hasPermission()) {
@@ -62,9 +62,7 @@ class WhisperHelper {
     );
 
     _isRecording = true;
-    debugPrint(
-      "🎙[WHISPER] Grabando: ${_currentRecordingPath!.split('/').last}",
-    );
+    debugPrint("[WHISPER] Grabando: ${_currentRecordingPath!.split('/').last}");
   }
 
   static Future<String?> stopRecordingAndTranscribe() async {
