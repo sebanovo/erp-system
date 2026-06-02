@@ -35,7 +35,7 @@ class WhisperHelper {
     // Descargar modelo si no existe
     await controller.downloadModel(_model);
     _isInitialized = true;
-    debugPrint("✅ [WHISPER] Modelo listo: ${_model.name}");
+    debugPrint("[WHISPER] Modelo listo: ${_model.name}");
   }
 
   static Future<void> startRecording() async {
@@ -44,7 +44,7 @@ class WhisperHelper {
     }
 
     if (_isRecording) {
-      debugPrint("⚠️ [WHISPER] Ya hay una grabación en curso");
+      debugPrint("[WHISPER] Ya hay una grabación en curso");
       return;
     }
 
@@ -63,33 +63,31 @@ class WhisperHelper {
 
     _isRecording = true;
     debugPrint(
-      "🎙️ [WHISPER] Grabando: ${_currentRecordingPath!.split('/').last}",
+      "🎙[WHISPER] Grabando: ${_currentRecordingPath!.split('/').last}",
     );
   }
 
   static Future<String?> stopRecordingAndTranscribe() async {
     if (!_isRecording) {
-      debugPrint("⚠️ [WHISPER] No hay grabación activa");
+      debugPrint("[WHISPER] No hay grabación activa");
       return null;
     }
 
     final startTime = DateTime.now();
 
-    debugPrint("⏹️ [WHISPER] Deteniendo grabación...");
+    debugPrint("[WHISPER] Deteniendo grabación...");
 
     // Detener grabación
     final audioPath = await _recorder.stop();
     _isRecording = false;
 
     if (audioPath == null) {
-      debugPrint("❌ [WHISPER] No se pudo detener la grabación");
+      debugPrint("[WHISPER] No se pudo detener la grabación");
       return null;
     }
 
-    debugPrint("📁 [WHISPER] Archivo guardado: ${audioPath.split('/').last}");
-    debugPrint(
-      "🔄 [WHISPER] Iniciando transcripción con modelo: ${_model.name}",
-    );
+    debugPrint("[WHISPER] Archivo guardado: ${audioPath.split('/').last}");
+    debugPrint("[WHISPER] Iniciando transcripción con modelo: ${_model.name}");
 
     // Transcribir con Whisper
     final result = await controller.transcribe(
@@ -105,14 +103,14 @@ class WhisperHelper {
     if (result != null && result.transcription.text.isNotEmpty) {
       // Logs detallados como en el ejemplo
       debugPrint("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      debugPrint("✅ [TRANSCRIPTION COMPLETE]");
-      debugPrint("⏱️  Total time (inc. conversion): ${totalTime}ms");
-      debugPrint("📝 Text: ${result.transcription.text}");
+      debugPrint("[TRANSCRIPTION COMPLETE]");
+      debugPrint("Total time (inc. conversion): ${totalTime}ms");
+      debugPrint("Text: ${result.transcription.text}");
       debugPrint("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
       return result.transcription.text;
     } else {
-      debugPrint("❌ [WHISPER] Transcripción fallida o vacía");
+      debugPrint("[WHISPER] Transcripción fallida o vacía");
       return null;
     }
   }
@@ -122,7 +120,7 @@ class WhisperHelper {
       await _recorder.cancel();
       _isRecording = false;
       _currentRecordingPath = null;
-      debugPrint("⏹️ [WHISPER] Grabación cancelada");
+      debugPrint("[WHISPER] Grabación cancelada");
     }
   }
 
@@ -131,6 +129,6 @@ class WhisperHelper {
     _controller = null;
     _isInitialized = false;
     _isRecording = false;
-    debugPrint("🔚 [WHISPER] Recursos liberados");
+    debugPrint("[WHISPER] Recursos liberados");
   }
 }
