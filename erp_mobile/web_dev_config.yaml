@@ -1,9 +1,0 @@
-server:
-  host: "localhost"
-  port: 5200
-  # https: # esto hacer despues
-  #   cert-path: "/path/to/cert.pem" # Path <string> to your TLS certificate
-  #   cert-key-path: "/path/to/key.pem" # Path <string> to TLS certificate key
-  proxy:
-    - target: "https://ninuwu5pf0.execute-api.us-east-1.amazonaws.com" # Base URL <string> of your backend
-      prefix: "/" # Path <string>
