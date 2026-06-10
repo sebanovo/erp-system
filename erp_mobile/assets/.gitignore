@@ -1,0 +1,7 @@
+# Ignorar todo
+*
+
+# Permitir logo.png
+!logo.png
+
+!.gitignore
